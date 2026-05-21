@@ -14,7 +14,7 @@ include <tunables/global>
 @{cache_dirs} = @{user_cache_dirs}/@{name}
 
 @{exec_path} = @{lib_dirs}/Discord
-profile discord @{lib_dirs}/Discord flags=(attach_disconnected, attach_disconnected.path=@{att}) {
+profile discord @{lib_dirs}/Discord flags=(attach_disconnected) {
   include <abstractions/attached/base>
   include <abstractions/audio-client>
   include <abstractions/camera>
@@ -47,7 +47,7 @@ profile discord @{lib_dirs}/Discord flags=(attach_disconnected, attach_disconnec
 
   #owner @{config_dirs}/@{version}/modules/** m, #outdated
   owner @{lib_dirs}/*.node rm,
-  owner @{lib_dirs}/modules/*/*/*.node rm,
+  owner @{lib_dirs}/modules/**.node rm,
   owner @{lib_dirs}/modules/discord_*/discord_*/*.so rm,
   owner @{lib_dirs}/modules/discord_*/discord_*/*.so.* rm,
   owner @{user_config_dirs}/autostart/discord.desktop rw,

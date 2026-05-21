@@ -16,7 +16,8 @@ profile discord-updater /usr/share/discord/updater_bootstrap {
   network inet6 stream,
   network netlink raw,
 
-  @{exec_path}         r,
+  @{exec_path} r,
+
   @{bin}/getconf     rix,
   @{bin}/lsb_release rpx,
   @{bin}/zenity      rcx -> zenity,
@@ -43,11 +44,12 @@ profile zenity {
 
   @{bin}/zenity r,
 
-  signal receive set=term peer=discord-updater,
+  signal (receive) set=(term) peer=discord-updater,
 
   include if exists <local/discord-updater_zenity>
 }
 
   include if exists <local/discord-updater>
 }
+
 # vim:syntax=apparmor

@@ -21,4 +21,5 @@ profile discord-launch @{bin}/discord {
 
   include if exists <local/discord-launch>
 }
+
 # vim:syntax=apparmor
