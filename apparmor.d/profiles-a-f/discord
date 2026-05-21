@@ -9,13 +9,13 @@ include <tunables/global>
 
 @{name} = discord
 @{domain} = org.chromium.Chromium
-@{lib_dirs} = /usr/share/@{name} /opt/@{name}
+@{lib_dirs} = @{user_config_dirs}/@{name}/app-@{version}/ /usr/share/@{name} /opt/@{name}
 @{config_dirs} = @{user_config_dirs}/@{name} @{user_config_dirs}/discordptb
 @{cache_dirs} = @{user_cache_dirs}/@{name}
 
-@{exec_path} = @{bin}/discord{,-ptb} @{lib_dirs}/Discord{,PTB}
-profile discord @{exec_path} flags=(attach_disconnected) {
-  include <abstractions/base>
+@{exec_path} = @{lib_dirs}/Discord
+profile discord @{lib_dirs}/Discord flags=(attach_disconnected, attach_disconnected.path=@{att}) {
+  include <abstractions/attached/base>
   include <abstractions/audio-client>
   include <abstractions/camera>
   include <abstractions/common/electron>
@@ -32,10 +32,12 @@ profile discord @{exec_path} flags=(attach_disconnected) {
   @{exec_path} mrix,
   @{sh_path}    rix,
 
-  @{lib_dirs}/chrome-sandbox rix,
+  @{lib_dirs}/chrome-sandbox rix, #this doesn't seem to be needed
+  owner @{lib_dirs}/modules/discord_voice-1/discord_voice/gpu_encoder_helper rix,
 
-  @{bin}/lsb_release   rPx,
-  @{open_path}         rPx -> child-open-strict,
+  @{bin}/getconf       rix,
+  @{bin}/lsb_release   rpx,
+  @{open_path}         rpx -> child-open-strict,
 
   /etc/ r,
   /etc/lsb-release r,
@@ -43,12 +45,17 @@ profile discord @{exec_path} flags=(attach_disconnected) {
   owner @{user_videos_dirs}/{,**} rwl,
   owner @{user_pictures_dirs}/{,**} rwl,
 
-  owner @{config_dirs}/@{version}/modules/** m,
+  #owner @{config_dirs}/@{version}/modules/** m, #outdated
+  owner @{lib_dirs}/*.node rm,
+  owner @{lib_dirs}/modules/*/*/*.node rm,
+  owner @{lib_dirs}/modules/discord_*/discord_*/*.so rm,
+  owner @{lib_dirs}/modules/discord_*/discord_*/*.so.* rm,
   owner @{user_config_dirs}/autostart/discord.desktop rw,
 
   owner "@{tmp}/Discord Crashes/" rw,
   owner @{tmp}/discord.sock rw,
   owner @{tmp}/net-export/ rw,
+  owner @{tmp}/.tmp@{rand6}/ rw,
 
   owner @{run}/user/@{uid}/discord-ipc-@{int} rw,
 
