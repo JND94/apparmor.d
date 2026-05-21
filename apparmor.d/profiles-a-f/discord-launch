@@ -1,0 +1,24 @@
+abi <abi/4.0>,
+
+include <tunables/global>
+
+@{name} = discord
+@{config_dirs} = @{user_config_dirs}/@{name} @{user_config_dirs}/discordptb
+
+@{exec_path} = @{bin}/discord
+profile discord-launch @{bin}/discord {
+  include <abstractions/base-strict>
+
+  /usr/share/discord/updater_bootstrap  rpx -> discord-updater,
+  @{config_dirs}/app-@{version}/Discord rpx,
+
+  @{exec_path}   r,
+  @{bin}/mkdir rix,
+
+  /dev/tty rw,
+
+  owner @{config_dirs}/ rw,
+
+  include if exists <local/discord-launch>
+}
+# vim:syntax=apparmor
