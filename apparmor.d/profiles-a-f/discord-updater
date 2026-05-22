@@ -19,7 +19,7 @@ profile discord-updater /usr/share/discord/updater_bootstrap {
   @{exec_path} r,
 
   @{bin}/getconf     rix,
-  @{bin}/lsb_release rpx,
+  @{bin}/lsb_release rPx,
   @{bin}/zenity      rcx -> zenity,
 
   owner @{config_dirs}/ rw,
@@ -35,19 +35,19 @@ profile discord-updater /usr/share/discord/updater_bootstrap {
 
   owner @{tmp}/.tmp@{rand6}/ rw,
 
-profile zenity {
-  include <abstractions/base-strict>
-  include <abstractions/graphics>
-  include <abstractions/desktop>
-  include <abstractions/fontconfig-cache-read>
-  include <abstractions/dconf>
+  profile zenity {
+    include <abstractions/base-strict>
+    include <abstractions/graphics>
+    include <abstractions/desktop>
+    include <abstractions/fontconfig-cache-read>
+    include <abstractions/dconf>
 
-  @{bin}/zenity r,
+    @{bin}/zenity r,
 
-  signal (receive) set=(term) peer=discord-updater,
+    signal (receive) set=(term) peer=discord-updater,
 
-  include if exists <local/discord-updater_zenity>
-}
+    include if exists <local/discord-updater_zenity>
+  }
 
   include if exists <local/discord-updater>
 }
