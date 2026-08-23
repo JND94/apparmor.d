@@ -136,6 +136,7 @@ profile kwin_wayland @{exec_path} flags=(attach_disconnected,mediate_deleted) {
 
   owner @{run}/user/@{uid}/kwin-xwayland-eis-socket.@{int} rw,
   owner @{run}/user/@{uid}/kwin-xwayland-eis-socket.@{int}.lock rwk,
+  owner @{run}/user/@{uid}/wayland-@{int}.lock rwk,
 
   owner /dev/shm/.org.chromium.Chromium.@{rand6} rw,
 
