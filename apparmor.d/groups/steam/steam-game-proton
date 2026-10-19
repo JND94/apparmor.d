@@ -13,6 +13,7 @@ include <tunables/global>
 @{exec_path} = @{proton_dirs}proton
 profile steam-game-proton @{proton_dirs}proton flags=(attach_disconnected) {
   include <abstractions/base>
+  include <abstractions/audio-client>
   include <abstractions/dev/write/input>
   include <abstractions/fonts>
   include <abstractions/fontconfig-cache-write>
@@ -56,7 +57,8 @@ profile steam-game-proton @{proton_dirs}proton flags=(attach_disconnected) {
   owner @{share_dirs}/legacycompat/SteamService.exe r,
   owner @{share_dirs}/legacycompat/Steam.dll        r,
 
-  owner @{app_dirs}/** rwlk,
+  owner @{app_dirs}/ r,
+  owner @{app_dirs}/** rwlkm,
   owner @{proton_dirs} r,
   owner @{proton_dirs}** rwkm,
   owner @{compatdata}/*/** rwlkm,
@@ -69,10 +71,12 @@ profile steam-game-proton @{proton_dirs}proton flags=(attach_disconnected) {
         /dev/ r,
   owner /dev/shm/u@{uid}-ValveIPCSharedObj-Steam rwk,
   owner /dev/shm/u@{uid}-Shm_* rw,
+  owner @{att}/dev/shm/ValveIPCSHM_@{uid} rw,
 
   /etc/machine-id r,
 
         @{att}@{run}/dbus/system_bus_socket rw,
+  owner @{att}@{run}/user/@{uid}/bus rw,
   owner @{att}@{run}/user/@{uid}/wayland-@{int} rw,
   owner @{att}@{run}/user/@{uid}/pulse/native rw,
 
@@ -81,6 +85,7 @@ profile steam-game-proton @{proton_dirs}proton flags=(attach_disconnected) {
         @{run}/host/usr/share/{,**} r,
         @{run}/host/fonts/{,**} r,
         @{run}/host/fonts-cache/@{hex32}-le64.cache-@{int} r,
+        @{run}/host/fonts-cache/@{hex32}-le32d4.cache-@{int} r,
   owner @{run}/host/user-fonts-cache/@{hex32}-le64.cache-@{int} r,
   owner @{run}/pressure-vessel/Xauthority r,
 
@@ -93,6 +98,7 @@ profile steam-game-proton @{proton_dirs}proton flags=(attach_disconnected) {
         @{PROC}/modules r,
         @{PROC}/@{pid}/net/dev r,
         @{PROC}/sys/fs/file-max r,
+        @{PROC}/uptime r,
         @{PROC}/version r,
 
   owner @{att}@{tmp}/steam_chrome_overlay_uid@{uid}_spid@{pid} rw,
@@ -106,8 +112,16 @@ profile steam-game-proton @{proton_dirs}proton flags=(attach_disconnected) {
 
   profile zenity flags=(complain) {
     include <abstractions/base>
+    include <abstractions/fonts>
+    include <abstractions/X-strict>
 
-    # TODO ?
+    owner @{proton_dirs}protonfixes/files/bin/zenity r,
+
+    owner @{run}/user/@{uid}/wayland-@{int} rw,
+    owner @{run}/pressure-vessel/Xauthority r,
+
+    @{run}/host/fonts/{,**} r,
+
 
   }
   include if exists <local/steam-game-proton>

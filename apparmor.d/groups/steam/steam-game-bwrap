@@ -39,6 +39,8 @@ profile steam-game-bwrap @{app_dirs}/@{runtime}/pressure-vessel/libexec/steam-ru
   ptrace trace peer=steam-game-bwrap,
   ptrace (read, trace) peer=steam-game-bwrap//&steam-game-proton,
 
+  signal receive set=int peer=steam-srt-launcher-service,
+
   @{exec_path} rm,
 
   @{bin}/bwrap r,
@@ -128,6 +130,7 @@ profile steam-game-bwrap @{app_dirs}/@{runtime}/pressure-vessel/libexec/steam-ru
         @{run}/host/usr/share/{,**} r,
         @{run}/host@{lib}/os-release r,
         @{run}/host/fonts-cache/@{hex32}-le64.cache-@{int} r,
+        @{run}/host/fonts-cache/@{hex32}-le32d4.cache-@{int} r,
   owner @{run}/host/user-fonts-cache/@{hex32}-le64.cache-@{int} r,
   owner @{run}/pressure-vessel/Xauthority r,
   owner @{run}/pressure-vessel/pulse/config r,
@@ -137,8 +140,9 @@ profile steam-game-bwrap @{app_dirs}/@{runtime}/pressure-vessel/libexec/steam-ru
         @{PROC}/modules r,
         @{PROC}/@{pid}/net/dev r,
         @{PROC}/sys/fs/file-max r,
+        @{PROC}/uptime r,
   owner @{PROC}/@{pid}/pagemap r,
-  owner @{PROC}/@{pid}/cmdline r,
+  owner @{PROC}/@{pid}/cmdline rk,
   owner @{PROC}/@{pid}/comm r,
   owner @{PROC}/@{pid}/environ r,
   owner @{PROC}/@{pid}/stat r,

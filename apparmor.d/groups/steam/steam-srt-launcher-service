@@ -19,6 +19,8 @@ profile steam-srt-launcher-service @{client_runtime}/pressure-vessel/libexec/ste
   unix type=stream addr="@*/bus/steam-launch-wr/",
 
   signal receive set=term peer=steam-srt-client-container,
+  signal send set=int peer=steam-game-bwrap,
+  signal send set=int peer=steam-game-run,
 
   @{exec_path} rm,
 
@@ -52,9 +54,12 @@ profile steam-srt-launcher-service @{client_runtime}/pressure-vessel/libexec/ste
   owner @{HOME}/.local/ r,
   owner @{user_share_dirs}/ r,
 
-  owner @{att}/tmp/SteamEnvFD@{rand6} rw,
+  owner @{att}/@{tmp}/SteamEnvFD@{rand6} rw,
 
   owner @{run}/user/@{uid}/systemd/private rw,
+
+        @{PROC}/ r,
+  owner @{PROC}/@{pid}/task/@{tid}/children r,
 
   profile lspci {
     include <abstractions/base>
