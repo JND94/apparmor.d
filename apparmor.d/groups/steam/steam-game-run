@@ -1,0 +1,50 @@
+abi <abi/5.0>,
+
+include <tunables/global>
+
+@{share_dirs} = @{user_share_dirs}/Steam @{HOME}/.steam/debian-installation
+@{steam_library} = @{share_dirs}/steamapps @{MOUNTS}/**/SteamLibrary/steamapps
+@{app_dirs} = @{steam_library}/common
+@{compatdata} = @{steam_library}/compatdata
+@{runtime} = SteamLinuxRuntime SteamLinuxRuntime_sniper SteamLinuxRuntime_soldier SteamLinuxRuntime_4
+@{proton_dirs} = @{app_dirs}/Proton*/ @{share_dirs}/compatibilitytools.d/*/
+@{client_runtime} = @{share_dirs}/steamrt64/pv-runtime/steam-runtime-steamrt
+
+@{exec_path} = @{share_dirs}/steamrt64/reaper
+profile steam-game-run @{share_dirs}/steamrt64/reaper {
+  include <abstractions/base>
+
+  @{exec_path} rm,
+
+  @{bin}/readlink rix,
+  @{bin}/getopt rix,
+
+  /dev/tty rw,
+
+  owner @{app_dirs}/@{runtime}/_v2-entry-point rix,
+  owner @{app_dirs}/@{runtime}/run rcx -> run,
+
+  owner /dev/shm/u@{uid}-ValveIPCSharedObj-Steam rwk,
+  owner /dev/shm/u@{uid}-Shm_* rw,
+
+  owner @{share_dirs}/steamrt{32,64}/gameoverlayrenderer.so rm,
+
+  profile run {
+    include <abstractions/base>
+
+    owner @{app_dirs}/@{runtime}/run r,
+
+    @{sh_path} r,
+
+    @{bin}/readlink rix,
+
+    owner @{app_dirs}/@{runtime}/pressure-vessel/bin/pressure-vessel-unruntime rix,
+    owner @{app_dirs}/@{runtime}/pressure-vessel/bin/pressure-vessel-wrap rpx -> steam-game-runtime,
+
+    /dev/tty rw,
+
+    include if exists <local/steam-game-run_run>
+  }
+
+  include if exists <local/steam-game-run>
+}

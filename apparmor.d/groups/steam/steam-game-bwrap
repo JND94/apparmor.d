@@ -1,0 +1,175 @@
+abi <abi/5.0>,
+
+include <tunables/global>
+
+@{share_dirs} = @{user_share_dirs}/Steam @{HOME}/.steam/debian-installation
+@{steam_library} = @{share_dirs}/steamapps @{MOUNTS}/**/SteamLibrary/steamapps
+@{app_dirs} = @{steam_library}/common
+@{compatdata} = @{steam_library}/compatdata
+@{runtime} = SteamLinuxRuntime SteamLinuxRuntime_sniper SteamLinuxRuntime_soldier SteamLinuxRuntime_4
+@{proton_dirs} = @{app_dirs}/Proton*/ @{share_dirs}/compatibilitytools.d/*/
+@{client_runtime} = @{share_dirs}/steamrt64/pv-runtime/steam-runtime-steamrt
+
+@{exec_path} = @{app_dirs}/@{runtime}/pressure-vessel/libexec/steam-runtime-tools-0/srt-bwrap
+profile steam-game-bwrap @{app_dirs}/@{runtime}/pressure-vessel/libexec/steam-runtime-tools-0/srt-bwrap flags=(attach_disconnected) {
+  include <abstractions/base>
+  include <abstractions/audio-client>
+  include <abstractions/bwrap>
+  include <abstractions/dev/write/input>
+  include <abstractions/devices-usb-read>
+  include <abstractions/fonts>
+  include <abstractions/fontconfig-cache-write>
+  include <abstractions/graphics>
+  include <abstractions/nameservice-strict>
+  include <abstractions/sys/dmi-full>
+  include <abstractions/sys/input>
+  include <abstractions/ssl_certs>
+  include <abstractions/udev/input>
+  include <abstractions/wayland>
+  include <abstractions/wine>
+  include <abstractions/X-strict>
+
+  network inet dgram,
+  network inet stream,
+  network inet6 dgram,
+  network inet6 stream,
+
+  unix type=stream peer=(label=steam-game-proton),
+
+  ptrace trace peer=steam-game-bwrap,
+  ptrace (read, trace) peer=steam-game-bwrap//&steam-game-proton,
+
+  @{exec_path} rm,
+
+  @{bin}/bwrap r,
+  @{bin}/true rix,
+
+  owner @{bin}/cat rix,
+  owner @{bin}/env rix,
+  owner @{bin}/gzip rix,
+  owner @{bin}/getopt rix,
+  owner @{bin}/ln rix,
+  owner @{bin}/mkdir rix,
+  owner @{bin}/readlink rix,
+  owner @{bin}/rm rix,
+  owner @{bin}/uname rix,
+
+  @{run}/host@{bin}/ldconfig rix,
+  @{run}/host@{bin}/localedef rix,
+
+  owner @{bin}/steam-runtime-launcher-interface-0 rix, #proton
+  owner @{app_dirs}/@{runtime}/var/steam-runtime/@{arch}@{bin}/steam-runtime-launcher-interface-0 rix,
+  owner @{lib}/pressure-vessel/from-host/libexec/steam-runtime-tools-0/pv-adverb rix,
+  owner @{lib}/pressure-vessel/from-host/libexec/steam-runtime-tools-0/pv-locale-gen rix,
+  owner @{lib}/pressure-vessel/from-host/libexec/steam-runtime-tools-0/pv-try-setlocale rix,
+  owner @{lib}/pressure-vessel/from-host/libexec/steam-runtime-tools-0/@{multiarch}detect-lib rix,
+  owner @{lib}/pressure-vessel/from-host/libexec/steam-runtime-tools-0/@{multiarch}detect-platform rix,
+
+  owner @{share_dirs}/linux32/steamerrorreporter rix, #nnp - stacked?
+  owner @{share_dirs}/steamrt64/gameoverlayui rix, #nnp - stacked?
+
+  priority=1 owner @{proton_dirs}** rpx -> steam-game-bwrap//&steam-game-proton,
+  owner @{python_path} rpx -> steam-game-bwrap//&steam-game-proton,
+
+  owner @{app_dirs}/@{runtime}/pressure-vessel/lib/@{multiarch}/steam-runtime-tools-0/libcap.so* m,
+  owner @{app_dirs}/SteamLinuxRuntime/steam-runtime@{lib}/@{multiarch}/*.so* m, #steamerrorreporter
+  owner @{share_dirs}/steamrt{32,64}/gameoverlayrenderer.so rm,
+  owner @{share_dirs}/ubuntu12_{32,64}/steamoverlayvulkanlayer.so rm,
+  owner @{share_dirs}/linux{32,64}/{steamclient,crashhandler}.so rm,
+  owner @{share_dirs}/steamclient{,64}.dll r,
+  owner @{share_dirs}/GameOverlayRenderer64.dll r,
+  owner @{share_dirs}/legacycompat/SteamService.exe r,
+  owner @{share_dirs}/legacycompat/Steam.dll r,
+
+  owner /bindfile@{rand6} rw,
+
+  owner @{app_dirs}/ r,
+  owner @{app_dirs}/** rwklmix,
+  owner @{proton_dirs} r,
+  owner @{proton_dirs}** rwkm,
+  owner @{compatdata}/*/** rwlkm,
+
+  /mnt/ r,
+  @{MOUNTS}/ r,
+
+  owner /usr/ r,
+  owner @{lib}/ r,
+  owner /usr/local/ r,
+  owner /usr/local/lib/ r,
+  owner @{steam_library}/ r,
+  owner @{share_dirs}/ r,
+
+          /home/ r,
+  owner @{HOME}/ r,
+  owner @{HOME}/.steam/steam.pid r,
+  owner @{HOME}/.steam/registry.vdf rk,
+
+  owner @{user_cache_dirs}/dxvk/@{hex16}.dxvk.{bin,lut} rw, # native game using dxvk
+
+  owner @{user_config_dirs}/vkBasalt/vkBasalt.conf r,
+  owner @{user_config_dirs}/MangoHud/MangoHud.conf r,
+
+        /dev/tty rw,
+        /dev/shm/ r,
+  owner /dev/shm/u@{uid}-ValveIPCSharedObj-Steam rwk,
+  owner /dev/shm/u@{uid}-Shm_* rw,
+
+  /etc/machine-id r,
+
+        @{att}@{run}/dbus/system_bus_socket rw, # !!!
+  owner @{att}@{run}/user/@{uid}/bus rw,
+  owner @{att}@{run}/user/@{uid}/pulse/native rw,
+  owner @{att}@{run}/user/@{uid}/wayland-@{int} rw,
+
+        @{run}/host@{lib}/**.so* rm,
+        @{run}/host@{lib}/locale/locale-archive r,
+        @{run}/host@{lib}/gconv/gconv-modules.cache r,
+        @{run}/host/fonts/{,**} r,
+        @{run}/host/usr/share/{,**} r,
+        @{run}/host@{lib}/os-release r,
+        @{run}/host/fonts-cache/@{hex32}-le64.cache-@{int} r,
+  owner @{run}/host/user-fonts-cache/@{hex32}-le64.cache-@{int} r,
+  owner @{run}/pressure-vessel/Xauthority r,
+  owner @{run}/pressure-vessel/pulse/config r,
+
+        @{PROC}/ r,
+        @{PROC}/version r,
+        @{PROC}/modules r,
+        @{PROC}/@{pid}/net/dev r,
+        @{PROC}/sys/fs/file-max r,
+  owner @{PROC}/@{pid}/pagemap r,
+  owner @{PROC}/@{pid}/cmdline r,
+  owner @{PROC}/@{pid}/comm r,
+  owner @{PROC}/@{pid}/environ r,
+  owner @{PROC}/@{pid}/stat r,
+  owner @{PROC}/@{pid}/task/ r,
+  owner @{PROC}/@{pid}/task/@{tid}/comm w,
+  owner @{PROC}/@{pid}/task/@{tid}/stat r,
+  owner @{PROC}/@{pid}/uid_map r,
+
+        /tmp/ r,
+  owner @{tmp}/#@{int} rw,
+  owner @{tmp}/dumps/crash_@{word16}.dmp rw,
+  owner @{tmp}/dumps/@{user}_log.txt rw, #steamerrorreporter
+  owner @{tmp}/source_engine_@{int10}.lock rwk,
+  owner @{tmp}/pressure-vessel-locales-@{rand6}/{,**} rwl,
+  owner @{tmp}/pressure-vessel-libs-@{rand6}/{,**} rw,
+  owner @{att}@{tmp}/steam_chrome_overlay_uid@{uid}_spid@{pid} rw, #gameoverlayui
+
+  owner /var/cache/ldconfig/aux-cache* rw,
+  owner /var/pressure-vessel/ldso/new-ld.so.cache* rw,
+  owner /var/pressure-vessel/ldso/ld.so.cache rw,
+  owner /var/pressure-vessel/ldso/ld.so.conf rw,
+  owner /var/pressure-vessel/ldso/ld.so.conf.@{rand6} rw,
+  owner /var/pressure-vessel/ldso/runtime-ld.so.conf r,
+  owner /var/pressure-vessel/ldso/runtime-ld.so.cache r,
+
+  @{sys}/ r,
+  @{sys}/kernel/ r,
+  @{sys}/devices/virtual/dmi/id/sys_vendor k,
+  @{sys}/devices/virtual/dmi/id/product_name k,
+  @{sys}/devices/virtual/net/*/carrier r,
+  @{sys}/devices/system/clocksource/clocksource@{int}/current_clocksource r,
+  
+  include if exists <local/steam-game-bwrap>
+}

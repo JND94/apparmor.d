@@ -1,0 +1,181 @@
+abi <abi/5.0>,
+
+include <tunables/global>
+
+@{share_dirs} = @{user_share_dirs}/Steam @{HOME}/.steam/debian-installation
+@{steam_library} = @{share_dirs}/steamapps @{MOUNTS}/**/SteamLibrary/steamapps
+@{app_dirs} = @{steam_library}/common
+@{compatdata} = @{steam_library}/compatdata
+@{runtime} = SteamLinuxRuntime SteamLinuxRuntime_sniper SteamLinuxRuntime_soldier SteamLinuxRuntime_4
+@{proton_dirs} = @{app_dirs}/Proton*/ @{share_dirs}/compatibilitytools.d/*/
+@{client_runtime} = @{share_dirs}/steamrt64/pv-runtime/steam-runtime-steamrt
+
+@{exec_path} = @{app_dirs}/@{runtime}/pressure-vessel/libexec/steam-runtime-tools-0/srt-bwrap
+profile steam-fossilize-bwrap @{app_dirs}/@{runtime}/pressure-vessel/libexec/steam-runtime-tools-0/srt-bwrap flags=(attach_disconnected) {
+  include <abstractions/base>
+  include <abstractions/audio-client>
+  include <abstractions/bwrap>
+  include <abstractions/dev/write/input>
+  include <abstractions/devices-usb-read>
+  include <abstractions/fonts>
+  include <abstractions/fontconfig-cache-write>
+  include <abstractions/graphics>
+  include <abstractions/nameservice-strict>
+  include <abstractions/sys/dmi-full>
+  include <abstractions/sys/input>
+  include <abstractions/ssl_certs>
+  include <abstractions/udev/input>
+  include <abstractions/wayland>
+  include <abstractions/wine>
+  include <abstractions/X-strict>
+
+  network inet dgram,
+  network inet stream,
+  network inet6 dgram,
+  network inet6 stream,
+
+  ptrace trace peer=steam-fossilize-bwrap,
+
+  @{exec_path} rm,
+
+  @{bin}/bwrap r,
+  @{bin}/true rix,
+  @{python_path} rix,
+
+  owner @{bin}/getopt rix,
+  owner @{bin}/gzip rix,
+  owner @{bin}/readlink rix,
+
+  @{run}/host@{bin}/localedef rix,
+  @{run}/host@{bin}/ldconfig rix,
+
+  owner @{bin}/steam-runtime-launcher-interface-0 rix,
+  owner @{lib}/pressure-vessel/from-host/libexec/steam-runtime-tools-0/pv-adverb rix,
+  owner @{lib}/pressure-vessel/from-host/libexec/steam-runtime-tools-0/pv-locale-gen rix,
+  owner @{lib}/pressure-vessel/from-host/libexec/steam-runtime-tools-0/pv-try-setlocale rix,
+  owner @{lib}/pressure-vessel/from-host/libexec/steam-runtime-tools-0/@{multiarch}detect-lib rix,
+
+  owner @{att}@{proton_dirs}** rmix,
+  owner @{proton_dirs}** rmix,
+
+  owner @{app_dirs}/@{runtime}/pressure-vessel/lib/@{multiarch}/steam-runtime-tools-0/**.so* rm,
+  owner @{app_dirs}/@{runtime}/var/tmp-@{rand6}/usr/.ref rw,
+  owner @{share_dirs}/ubuntu12_64/libVkLayer_steam_fossilize.so rm,
+
+  owner @{att}// r,
+  owner @{steam_library}/ r,
+  owner @{compatdata}/*/{,**} rwmk,
+  owner @{att}@{steam_library}/ r,
+  owner @{att}@{compatdata}/ r,
+  owner @{att}@{compatdata}/*/{,**} rwm,
+
+  owner @{share_dirs}/shader_cache_temp_dir_d3d11_64/** rw,
+  owner @{share_dirs}/shader_cache_temp_dir_d3d12_64/** rw,
+  owner @{share_dirs}/steamapps/shadercache/@{int}/fozpipelinesv@{int}/{,**} rw,
+  owner @{share_dirs}/steamapps/shadercache/@{int}/mesa_shader_cache_sf/{,**} rwk,
+  owner @{share_dirs}/steamapps/shadercache/@{int}/nvidiav@{int}/GLCache/ rw,
+  owner @{share_dirs}/steamapps/shadercache/@{int}/nvidiav@{int}/GLCache/** rwk,
+
+  owner @{share_dirs}/bin/d3ddriverquery64.exe r,
+  owner @{share_dirs}/steamclient{,64}.dll r,
+  owner @{share_dirs}/GameOverlayRenderer64.dll r,
+  owner @{share_dirs}/legacycompat/SteamService.exe r,
+  owner @{share_dirs}/legacycompat/Steam.dll r,
+
+  owner /bindfile@{rand6} rw,
+
+  owner @{lib}/ r,
+  owner /usr/local/lib/ r,
+          /home/ r,
+  owner @{HOME}/ r,
+  owner @{HOME}/.local/ r,
+  owner @{user_share_dirs}/ r,
+  owner @{share_dirs}/ r,
+  owner @{share_dirs}/bin/ r,
+  owner @{share_dirs}/fossilize_engine_filters.json r,
+
+        @{att}/home/ r,
+  owner @{att}@{HOME}/ r,
+  owner @{att}@{HOME}/.local/ r,
+  owner @{att}@{user_share_dirs}/ r,
+  owner @{att}@{share_dirs}/ r,
+  owner @{att}@{share_dirs}/bin/ r,
+
+  owner /usr/share/X11/xkb/rules/evdev.xml r,
+
+  /etc/machine-id r,
+
+        @{att}@{run}/dbus/system_bus_socket rw, # !!!
+  owner @{att}@{run}/user/@{uid}/wayland-@{int} rw,
+  owner @{att}@{run}/user/@{uid}/bus rw,
+
+        @{run}/host@{lib}/**.so* rm,
+        @{run}/host@{lib}/locale/locale-archive r,
+        @{run}/host@{lib}/gconv/gconv-modules.cache r,
+        @{run}/host/fonts/{,**} r,
+        @{run}/host/fonts-cache/@{hex32}-le64.cache-@{int} r,
+        @{run}/host/usr/share/{,**} r,
+  owner @{run}/host/user-fonts-cache/@{hex32}-le64.cache-@{int} r,
+
+        @{PROC}/modules r,
+        @{PROC}/@{pid}/net/dev r,
+  owner @{PROC}/@{pid}/task/@{tid}/comm w,
+  owner @{PROC}/@{pid}/task/@{tid}/stat r,
+  owner @{PROC}/@{pid}/comm r,
+  owner @{PROC}/@{pid}/pagemap r,
+
+  @{sys}/devices/@{pci}/drm/ r,
+  @{sys}/devices/@{pci}/usb@{int}/busnum r,
+  @{sys}/devices/@{pci}/usb@{int}/devnum r,
+  @{sys}/devices/@{pci}/usb@{int}/speed r,
+  @{sys}/devices/@{pci}/usb@{int}/descriptors r,
+  @{sys}/devices/@{pci}/usb@{int}/*/speed r,
+  @{sys}/devices/@{pci}/usb@{int}/*/descriptors r,
+  @{sys}/devices/@{pci}/sound/card@{int}/input@{int}/ r,
+  @{sys}/devices/@{pci}/sound/card@{int}/input@{int}/capabilities/key r,
+  @{sys}/devices/@{pci}/sound/card@{int}/input@{int}/capabilities/ev r,
+  @{sys}/devices/@{pci}/sound/card@{int}/input@{int}/capabilities/rel r,
+  @{sys}/devices/@{pci}/sound/card@{int}/input@{int}/properties r,
+  @{sys}/devices/@{pci}/sound/card@{int}/input@{int}/capabilities/abs r,
+  @{sys}/devices/platform/uevent r,
+  @{sys}/devices/platform/pcspkr/uevent r,
+  @{sys}/devices/platform/pcspkr/input/input@{int}/uevent r,
+  @{sys}/devices/platform/pcspkr/input/input@{int}/event@{int}/uevent r,
+  @{sys}/devices/platform/pcspkr/input/input@{int}/ r,
+  @{sys}/devices/platform/pcspkr/input/input@{int}/capabilities/ev r,
+  @{sys}/devices/platform/pcspkr/input/input@{int}/capabilities/key r,
+  @{sys}/devices/platform/pcspkr/input/input@{int}/capabilities/rel r,
+  @{sys}/devices/platform/pcspkr/input/input@{int}/capabilities/abs r,
+  @{sys}/devices/platform/pcspkr/input/input@{int}/properties r,
+  @{sys}/devices/platform/LNXPWRBN:00/uevent r,
+  @{sys}/devices/platform/PNP0C0C:00/uevent r,
+  @{sys}/devices/platform/PNP0C0C:00/input/input@{int}/ r,
+  @{sys}/devices/platform/LNXPWRBN:00/input/input@{int}/ r,
+  @{sys}/devices/platform/LNXPWRBN:00/input/input@{int}/uevent r,
+  @{sys}/devices/platform/LNXPWRBN:00/input/input@{int}/event@{int}/uevent r,
+  @{sys}/devices/platform/PNP0C0C:00/input/input@{int}/uevent r,
+  @{sys}/devices/platform/PNP0C0C:00/input/input@{int}/event@{int}/uevent r,
+  @{sys}/devices/@{pci}/drm/card@{int}/card1-HDMI-A-1/edid r,
+  @{sys}/class/hidraw/ r,
+  @{sys}/class/sound/ r,
+  @{sys}/devices/virtual/sound/seq/uevent r,
+  @{sys}/devices/virtual/sound/timer/uevent r,
+  @{sys}/devices/system/clocksource/clocksource@{int}/current_clocksource r,
+  @{sys}/devices/virtual/net/lo/carrier r,
+  @{sys}/devices/@{pci}/net/eno1/carrier r,
+  @{sys}/devices/@{pci}/net/wlan0/carrier r,
+
+  owner @{tmp}/#@{int} rw,
+  owner @{tmp}/pressure-vessel-locales-@{rand6}/{,**} rwl,
+  owner @{tmp}/pressure-vessel-libs-@{rand6}/{,**} rw,
+
+  owner /var/cache/ldconfig/aux-cache* rw,
+  owner /var/pressure-vessel/ldso/new-ld.so.cache* rw,
+  owner /var/pressure-vessel/ldso/ld.so.cache rw,
+  owner /var/pressure-vessel/ldso/ld.so.conf rw,
+  owner /var/pressure-vessel/ldso/ld.so.conf.@{rand6} rw,
+  owner /var/pressure-vessel/ldso/runtime-ld.so.conf r,
+  owner /var/pressure-vessel/ldso/runtime-ld.so.cache r,
+
+  include if exists <local/steam-fossilize-bwrap>
+}

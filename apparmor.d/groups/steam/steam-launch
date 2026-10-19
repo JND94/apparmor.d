@@ -1,25 +1,21 @@
-# apparmor.d - Full set of apparmor profiles
-# Copyright (C) 2024 Alexandre Pujol <alexandre@pujol.io>
-# SPDX-License-Identifier: GPL-2.0-only
-
 abi <abi/5.0>,
 
 include <tunables/global>
 
-@{runtime} = SteamLinuxRuntime_{sniper,soldier}
 @{share_dirs} = @{user_share_dirs}/Steam @{HOME}/.steam/debian-installation
-@{lib_dirs} = @{share_dirs}/ubuntu@{int2}_{32,64} @{share_dirs}/linux{32,64}
-@{runtime_dirs} = @{lib_dirs}/steam-runtime{,-sniper}
-@{app_dirs} = @{share_dirs}/steamapps/common/
+@{steam_library} = @{share_dirs}/steamapps @{MOUNTS}/**/SteamLibrary/steamapps
+@{app_dirs} = @{steam_library}/common
+@{compatdata} = @{steam_library}/compatdata
+@{runtime} = SteamLinuxRuntime SteamLinuxRuntime_sniper SteamLinuxRuntime_soldier SteamLinuxRuntime_4
+@{proton_dirs} = @{app_dirs}/Proton*/ @{share_dirs}/compatibilitytools.d/*/
+@{client_runtime} = @{share_dirs}/steamrt64/pv-runtime/steam-runtime-steamrt
 
-@{exec_path} = @{bin}/steam @{bin}/steam-runtime
-profile steam-launch @{exec_path} {
+@{exec_path} = @{bin}/steam
+profile steam-launch @{bin}/steam {
   include <abstractions/base>
-  include <abstractions/python>
+  include <abstractions/consoles>
 
-  network unix stream,
-
-  @{exec_path} mr,
+  @{exec_path} r,
 
   @{sh_path}         rix,
   @{bin}/cat         rix,
@@ -32,33 +28,24 @@ profile steam-launch @{exec_path} {
   @{bin}/rm          rix,
   @{bin}/rmdir       rix,
 
-  @{lib}/steam/steam         rix,
-  @{lib}/steam/bin_steam.sh  rix,
-  @{share_dirs}/steam.sh     rPx,
+  @{lib}/steam/bin_steam.sh rix,
+  owner @{share_dirs}/steam.sh rpx, #steam
 
-  @{lib_dirs}/**  mr,
-
-  @{runtime_dirs}/@{arch}/@{bin}/steam-runtime-steam-remote     rPx,
-  @{runtime_dirs}/@{lib}/steam-runtime-tools-@{int}/* r,
-  @{runtime_dirs}/@{lib}/steam-runtime-tools-@{int}/srt-logger  rix,
-
-  /usr/ r,
-  /usr/local/ r,
+  owner @{client_runtime}/pressure-vessel/bin/steam-runtime-steam-remote rpx,
+  owner @{client_runtime}/pressure-vessel/libexec/steam-runtime-tools-0/srt-logger rix,
+  owner @{client_runtime}/pressure-vessel/libexec/steam-runtime-tools-0/logger-0.bash r,
 
   owner @{share_dirs}/bootstrap.tar.xz rw,
+
+  owner @{client_runtime}/pressure-vessel/lib/@{multiarch}/steam-runtime-tools-0/** rm,
+
   owner @{share_dirs}/logs/ r,
-  owner @{share_dirs}/logs/* rwk,
+  owner @{share_dirs}/logs/* rwkl,
 
   owner @{run}/user/@{uid}/srt-fifo.@{rand6}/ rw,
   owner @{run}/user/@{uid}/srt-fifo.@{rand6}/fifo rw,
 
   owner @{PROC}/@{pid}/fd/@{int} rw,
 
-  /dev/tty rw,
-
-  deny /opt/** r,
-
   include if exists <local/steam-launch>
 }
-
-# vim:syntax=apparmor

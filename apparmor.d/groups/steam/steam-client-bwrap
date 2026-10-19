@@ -1,0 +1,267 @@
+abi <abi/5.0>,
+
+include <tunables/global>
+
+@{domain} = com.valvesoftware.Steam
+@{share_dirs} = @{user_share_dirs}/Steam @{HOME}/.steam/debian-installation
+@{steam_library} = @{share_dirs}/steamapps @{MOUNTS}/**/SteamLibrary/steamapps
+@{app_dirs} = @{steam_library}/common
+@{compatdata} = @{steam_library}/compatdata
+@{runtime} = SteamLinuxRuntime SteamLinuxRuntime_sniper SteamLinuxRuntime_soldier SteamLinuxRuntime_4
+@{proton_dirs} = @{app_dirs}/Proton*/ @{share_dirs}/compatibilitytools.d/*/
+@{client_runtime} = @{share_dirs}/steamrt64/pv-runtime/steam-runtime-steamrt
+
+@{exec_path} = @{client_runtime}/pressure-vessel/libexec/steam-runtime-tools-0/srt-bwrap
+profile steam-client-bwrap @{client_runtime}/pressure-vessel/libexec/steam-runtime-tools-0/srt-bwrap flags=(attach_disconnected) {
+  include <abstractions/base>
+  include <abstractions/consoles>
+  include <abstractions/audio-client>
+  include <abstractions/backlight>
+  include <abstractions/bwrap>
+  include <abstractions/bus-session>
+  include <abstractions/common/chromium>
+  include <abstractions/dconf-write>
+  include <abstractions/devices-usb-read>
+  include <abstractions/devices-u2f>
+  include <abstractions/dev/read/input>
+  include <abstractions/disks-read>
+  include <abstractions/fonts>
+  include <abstractions/fontconfig-cache-write>
+  include <abstractions/graphics>
+  include <abstractions/gtk>
+  include <abstractions/gschemas>
+  include <abstractions/nameservice-strict>
+  include <abstractions/ssl_certs>
+  include <abstractions/sys/sound>
+  include <abstractions/sys/input>
+  include <abstractions/udev/input>
+  include <abstractions/X-strict>
+  include <abstractions/user-dirs>
+
+  network inet dgram,
+  network inet stream,
+  network inet6 dgram,
+  network inet6 stream,
+
+  ptrace trace peer=steam-client-bwrap,
+  ptrace (read, trace) peer=steam-client-bwrap//&steam-webhelper,
+  ptrace (read, trace) peer=steam-client-bwrap//&steam-gameoverlayui,
+
+  @{exec_path} rm,
+
+  @{sh_path}  rix,
+  @{bin}/true rix,
+
+  owner @{bin}/lsof rix,
+  owner @{share_dirs}/steamrt64/steam rix, #nnp - stacked?
+  owner @{bin}/steam-runtime-launch-client rix, #nnp - stacked?
+  owner @{bin}/dirname rix,
+  owner @{bin}/getopt rix,
+  owner @{bin}/readlink rix,
+  owner @{bin}/xdg-user-dir rix,
+
+  @{run}/host@{bin}/ldconfig rix,
+
+  owner @{lib}/pressure-vessel/from-host/libexec/steam-runtime-tools-0/pv-adverb rix,
+  owner @{lib}/pressure-vessel/from-host/libexec/steam-runtime-tools-0/pv-try-setlocale rix,
+  owner @{lib}/pressure-vessel/from-host/libexec/steam-runtime-tools-0/pv-locale-gen rix,
+  owner @{lib}/pressure-vessel/from-host/libexec/steam-runtime-tools-0/@{multiarch}detect-lib rix,
+  owner @{share_dirs}/steamrt64/steamsysinfo rix,
+  owner @{share_dirs}/steamrt64/steamwebhelper.sh rix,
+  owner @{PROC}/self/exe rpx -> steam-client-bwrap//&steam-webhelper,
+  owner @{share_dirs}/steamrt64/steamwebhelper rpx -> steam-client-bwrap//&steam-webhelper,
+  owner @{share_dirs}/bin/hardwareupdater/hardwareupdater.@{arch} rpx -> steam-client-bwrap//&steam-hardware-updater,
+  owner @{share_dirs}/steamrt64/gameoverlayui rpx -> steam-client-bwrap//&steam-gameoverlayui,
+  owner @{share_dirs}/ubuntu12_{32,64}/gldriverquery rix,
+  owner @{share_dirs}/ubuntu12_{32,64}/vulkandriverquery rix,
+  owner @{share_dirs}/linux32/steamerrorreporter rix, # nnp - stacked?
+
+  owner /bindfile@{rand6} rw,
+
+  /dev/input/event0 r,
+  @{att}/dev/dri/renderD128 rw,
+  owner /dev/shm/u@{uid}-ValveIPCSharedObj-Steam rwk,
+  owner /dev/shm/u@{uid}-Shm_* rw,
+  owner /dev/shm/ValveIPCSHM_@{uid} rw,
+
+  owner @{sbin}/ r,
+  owner @{lib}/ r,
+  owner /usr/ r,
+  owner /usr/local/ r,
+  owner /usr/local/lib/ r,
+  owner /usr/local/share/steam/ r,
+  owner /usr/share/fonts/{,**} rk,
+  owner /usr/share/fontconfig/{,**} r,
+  owner /usr/share/X11/XErrorDB r,
+  owner /usr/share/steam/ r,
+  owner /etc/fonts/fonts.conf r,
+  owner /etc/fonts/conf.d/ r,
+
+  /home/ r,
+  owner @{HOME}/ r,
+  owner @{HOME}/.steam/ r,
+  owner @{HOME}/.steam/exportedsettings.json rw,
+  owner @{HOME}/.steam/exportedsettings.json.async*.tmp rw,
+  owner @{HOME}/.steam/registry.vdf rwk,
+  owner @{HOME}/.steam/registry.vdf.*.tmp rw,
+  owner @{HOME}/.steam/steam.pipe rw,
+  owner @{HOME}/.steam/steam.token rw,
+  owner @{HOME}/.steam/steam.pid rw,
+
+  owner @{user_config_dirs}/ r,
+  owner @{user_config_dirs}/autostart/ r,
+  owner @{user_config_dirs}/pulse/cookie rk,
+
+  owner @{app_dirs}**/steam_autocloud.vdf rk,
+  owner @{app_dirs}/@{runtime}/toolmanifest.vdf rk,
+  owner @{share_dirs}/ r,
+  owner @{share_dirs}/** rwkm,
+  owner @{user_share_dirs}/icons/default/index.theme r,
+  owner @{user_share_dirs}/vulkan/implicit_layer.d/*.json rwk,
+
+        @{steam_library}/ r,
+  owner @{steam_library}/{,**} rwkm,
+        @{MOUNTS}/ r,
+  owner @{MOUNTS}/**/SteamLibrary/{,**} rwkm,
+
+        /var/tmp/ r,
+  owner /var/cache/ldconfig/aux-cache* rw,
+  owner /var/pressure-vessel/ldso/new-ld.so.cache* rw,
+  owner /var/pressure-vessel/ldso/ld.so.cache rw,
+  owner /var/pressure-vessel/ldso/ld.so.conf rw,
+  owner /var/pressure-vessel/ldso/ld.so.conf.@{rand6} rw,
+  owner /var/pressure-vessel/ldso/runtime-ld.so.conf r,
+  owner /var/pressure-vessel/ldso/runtime-ld.so.cache r,
+
+  owner /var/cache/fontconfig/@{hex32}-le64.cache-@{int}.NEW rw,
+
+        /tmp/ r,
+  owner @{tmp}/#@{int} rw,
+  owner @{tmp}/dumps/assert_*.dmp rw,
+  owner @{tmp}/dumps/ r,
+  owner @{tmp}/dumps/@{user}_log.txt rw,
+  owner @{tmp}/gameoverlay_ui.txt rw, #gameoverlayui
+  owner @{tmp}/gameoverlay_ui.previous.txt rw,
+  owner @{tmp}/pressure-vessel-locales-@{rand6}/ rw,
+  owner @{tmp}/pressure-vessel-libs-@{rand6}/{,**} rw,
+  owner @{tmp}/steam/ rw,
+  owner @{tmp}/steam@{rand6} rwk,
+  owner @{tmp}/steam@{rand6}/ rw,
+  owner @{tmp}/_@{rand9}/ rw,
+  owner @{tmp}/_@{rand9}/*.so* rwm,
+  owner @{tmp}/_@{rand9}/base_library.zip rw,
+  owner @{tmp}/SteamEnvFD@{rand6} rw,
+  owner @{tmp}/steam_chrome_shmem_uid@{uid}_spid@{pid} rw,
+  owner @{tmp}/steam_chrome_overlay_uid@{uid}_spid@{pid} rw, #gameoverlayui
+
+        @{att}@{run}/dbus/system_bus_socket rw, # !!
+  owner @{att}@{run}/user/@{uid}/bus rw,
+  owner @{att}@{run}/user/@{uid}/pulse/native rw,
+
+        @{run}/media/ r,
+        @{run}/host/usr/{,**} r,
+        @{run}/host/share/{,**} r,
+        @{run}/host/fonts/{,**} rk,
+        @{run}/host/fonts-cache/@{hex32}-le64.cache-@{int} r,
+        @{run}/host@{lib}/**.so* m,
+        @{run}/host@{lib}/locale/locale-archive r,
+        @{run}/host/root@{lib}/os-release rk,
+  owner @{run}/ r,
+  owner @{run}/host/user-fonts-cache/@{hex32}-le64.cache-@{int} r,
+  owner @{run}/pressure-vessel/Xauthority r,
+  owner @{run}/pressure-vessel/pulse/config r,
+
+  @{run}/udev/data/n2 r,
+  @{run}/udev/data/n3 r,
+  @{run}/udev/data/+pci:0000:02:00.0 r,
+  @{run}/udev/data/+pci:0000:03:00.0 r,
+  @{run}/udev/data/+pci:0000:06:00.0 r,
+  @{run}/udev/data/+pci:0000:02:06.0 r,
+
+
+  owner @{PROC}/@{pid}/comm rk,
+  owner @{PROC}/@{pid}/environ r,
+  owner @{PROC}/@{pid}/task/ r,
+  owner @{PROC}/@{pid}/task/@{tid}/status r,
+  owner @{PROC}/@{pid}/task/@{tid}/children r,
+  owner @{PROC}/@{pid}/statm r,
+  owner @{PROC}/@{pid}/clear_refs w,
+  owner @{PROC}/@{pid}/mounts r,
+  owner @{PROC}/@{pid}/fdinfo/@{int} r,
+  owner @{PROC}/@{pid}/uid_map r,
+  owner @{PROC}/@{pid}/oom_score_adj rw,
+  owner @{PROC}/@{pid}/cmdline r,
+        @{PROC}/ r,
+        @{PROC}/@{pid}/stat r,
+        @{PROC}/locks r,
+        @{PROC}/version r,
+        @{PROC}/@{pid}/net/route r,
+        @{PROC}/pressure/cpu r,
+        @{PROC}/pressure/io r,
+        @{PROC}/pressure/memory r,
+        @{PROC}/sys/fs/inotify/max_user_watches r,
+        @{PROC}/@{pid}/net/raw r,
+        @{PROC}/@{pid}/net/netlink r,
+        @{PROC}/@{pid}/net/packet r,
+        @{PROC}/@{pid}/net/unix r,
+        @{PROC}/@{pid}/net/raw6 r,
+        @{PROC}/@{pid}/net/sockstat6 r,
+        @{PROC}/@{pid}/net/tcp6 r,
+        @{PROC}/@{pid}/net/sockstat r,
+        @{PROC}/@{pid}/net/tcp r,
+        @{PROC}/@{pid}/net/udp6 r,
+        @{PROC}/@{pid}/net/udp r,
+        @{PROC}/@{pid}/net/icmp r,
+        @{PROC}/sys/kernel/yama/ptrace_scope r,
+
+  @{sys}/ r,
+  @{sys}/class/net/ r,
+  @{sys}/class/hidraw/ r,
+  @{sys}/devices/@{pci}/uevent r,
+  @{sys}/devices/@{pci}/subsystem_vendor r,
+  @{sys}/devices/@{pci}/subsystem_device r,
+  @{sys}/devices/virtual/dmi/id/bios_version rk,
+  @{sys}/devices/virtual/dmi/id/board_vendor rk,
+  @{sys}/devices/virtual/dmi/id/board_name rk,
+  @{sys}/devices/virtual/dmi/id/sys_vendor k,
+  @{sys}/devices/virtual/dmi/id/product_name k,
+  @{sys}/devices/virtual/net/lo/ r,
+  @{sys}/devices/@{pci}/sound/card@{int}/input@{int}/ r,
+  @{sys}/devices/@{pci}/sound/card@{int}/input@{int}/capabilities/key r,
+  @{sys}/devices/@{pci}/sound/card@{int}/input@{int}/capabilities/ev r,
+  @{sys}/devices/@{pci}/sound/card@{int}/input@{int}/capabilities/rel r,
+  @{sys}/devices/@{pci}/sound/card@{int}/input@{int}/properties r,
+  @{sys}/devices/@{pci}/sound/card@{int}/input@{int}/capabilities/abs r,
+  @{sys}/kernel/ r,
+  @{sys}/power/suspend_stats/success rk,
+  @{sys}/devices/platform/PNP0C0C:00/input/input0/ r,
+  @{sys}/devices/platform/LNXPWRBN:00/input/input1/ r,
+  @{sys}/devices/platform/pcspkr/input/input@{int}/ r,
+  @{sys}/devices/platform/pcspkr/uevent r,
+  @{sys}/devices/platform/uevent r,
+  @{sys}/devices/platform/LNXPWRBN:00/uevent r,
+  @{sys}/devices/platform/PNP0C0C:00/uevent r,
+
+  #overlaymonitor
+  @{sys}/devices/system/cpu/cpufreq/policy@{int}/cpuinfo_min_freq k,
+  @{sys}/devices/system/cpu/cpufreq/policy@{int}/scaling_cur_freq k,
+  @{sys}/devices/@{pci}/hwmon/ r,
+  @{sys}/devices/@{pci}/hwmon/hwmon@{int}/ r,
+  @{sys}/devices/@{pci}/hwmon/hwmon@{int}/temp@{int}_input rk,
+  @{sys}/devices/@{pci}/hwmon/hwmon@{int}/temp@{int}_label rk,
+  @{sys}/devices/virtual/thermal/thermal_zone@{int}/hwmon@{int}/temp@{int}_input rk,
+  @{sys}/devices/@{pci}/gpu_busy_percent rk,
+  @{sys}/devices/@{pci}/mem_info_vram_used rk,
+  @{sys}/devices/@{pci}/mem_info_vram_total rk,
+  @{sys}/devices/@{pci}/mem_info_gtt_used rk,
+  @{sys}/devices/@{pci}/mem_info_gtt_total rk,
+  @{sys}/class/hwmon/ r,
+  @{sys}/devices/@{pci}/drm/card@{int}/card*/ r,
+  @{sys}/devices/@{pci}/vendor rk,
+  @{sys}/devices/@{pci}/hwmon/hwmon@{int}/name rk,
+  @{sys}/devices/@{pci}/nvme/nvme@{int}/hwmon@{int}/name rk,
+  @{sys}/devices/virtual/thermal/thermal_zone@{int}/hwmon@{int}/name rk,
+  @{sys}/devices/platform/*/hwmon/hwmon@{int}/name rk,
+
+  include if exists <local/steam-client-bwrap>
+}

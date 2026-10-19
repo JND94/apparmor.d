@@ -1,0 +1,108 @@
+abi <abi/5.0>,
+
+include <tunables/global>
+
+@{share_dirs} = @{user_share_dirs}/Steam @{HOME}/.steam/debian-installation
+@{steam_library} = @{share_dirs}/steamapps @{MOUNTS}/**/SteamLibrary/steamapps
+@{app_dirs} = @{steam_library}/common
+@{compatdata} = @{steam_library}/compatdata
+@{runtime} = SteamLinuxRuntime SteamLinuxRuntime_sniper SteamLinuxRuntime_soldier SteamLinuxRuntime_4
+@{proton_dirs} = @{app_dirs}/Proton*/ @{share_dirs}/compatibilitytools.d/*/
+@{client_runtime} = @{share_dirs}/steamrt64/pv-runtime/steam-runtime-steamrt
+
+@{exec_path} = @{user_share_dirs}/Steam/steamrt64/steam
+profile steam-executable64 @{user_share_dirs}/Steam/steamrt64/steam {
+  include <abstractions/base>
+  include <abstractions/consoles>
+  include <abstractions/graphics>
+  include <abstractions/nameservice-strict>
+  include <abstractions/ssl_certs>
+  include <abstractions/sys/dmi>
+  include <abstractions/X-strict>
+
+  network inet dgram,
+  network inet stream,
+  network inet6 dgram,
+  network inet6 stream,
+  network netlink raw,
+
+  @{exec_path} rpx,
+
+  @{sh_path} rix,
+  @{bin}/zenity rcx -> zenity,
+
+  owner @{user_share_dirs}/Steam/steamrt64/pv-runtime/steam-runtime-steamrt/pressure-vessel/bin/steam-runtime-check-requirements rcx -> check,
+  owner @{user_share_dirs}/Steam/steamrt64/pv-run.sh rpx, # steam-pv-run
+  owner @{user_share_dirs}/Steam/steam_msg.sh rcx -> zenity,
+
+  owner @{user_share_dirs}/Steam/{,**} rwmk,
+
+  / r,
+  /usr/ r,
+  /usr/local/ r,
+
+  /home/ r,
+  owner @{HOME}/ r,
+  owner @{HOME}/.steam/ r,
+  owner @{HOME}/.steam/steam.pid rw,
+  owner @{HOME}/.steam/bin64 rw,
+  owner @{HOME}/.steam/bin32 rw,
+  owner @{HOME}/.steam/steam rw,
+  owner @{HOME}/.steam/steam.token rw,
+  owner @{HOME}/.steam/steam.pipe rw,
+  owner @{HOME}/.steam/sdk32 rw,
+  owner @{HOME}/.steam/sdk64 rw,
+  owner @{HOME}/.steam/registry.vdf rwk,
+  owner @{HOME}/.steam/registry.vdf.*.tmp rw,
+  owner @{HOME}/.steam/root rw,
+  owner @{user_share_dirs}/Steam/logs/bootstrap_log.txt rw,
+
+  @{lib}/os-release k,
+
+  /tmp/ r,
+  owner /tmp/dumps/ rw,
+  owner /tmp/dumps@{int}/ rw,
+  owner /tmp/cmd-stdout.@{rand6} rw,
+  owner /tmp/cmd-stderr.@{rand6} rw,
+
+  @{run}/ r,
+  owner @{PROC}/@{pid}/fd/ r,
+  owner @{PROC}/@{pid}/task/ r,
+  @{PROC}/version r,
+
+  @{sys}/devices/virtual/dmi/id/sys_vendor k,
+  @{sys}/devices/virtual/dmi/id/product_name k,
+
+  profile zenity {
+    include <abstractions/base-strict>
+
+    @{sh_path} rix,
+
+    include if exists <local/steam-executable64_zenity>
+  }
+
+  profile check flags=(attach_disconnected, attach_disconnected.path=@{att}, mediate_deleted) {
+    include <abstractions/base>
+    include <abstractions/bwrap>
+    include <abstractions/nameservice-strict>
+
+    #@{bin}/bwrap rix, #not needed?
+    @{bin}/true rix,
+
+    / r,
+
+    owner @{user_share_dirs}/Steam/steamrt64/pv-runtime/steam-runtime-steamrt/pressure-vessel/libexec/steam-runtime-tools-0/srt-bwrap rix,
+
+    owner @{user_share_dirs}/Steam/steamrt64/pv-runtime/steam-runtime-steamrt/pressure-vessel/bin/steam-runtime-check-requirements rm,
+    owner @{user_share_dirs}/Steam/steamrt64/pv-runtime/steam-runtime-steamrt/pressure-vessel/lib/@{multiarch}/steam-runtime-tools-0/**.so* rm,
+
+    owner /tmp/cmd-stdout.@{rand6} rw,
+    owner /tmp/cmd-stderr.@{rand6} rw,
+
+    @{PROC}/1/cgroup r,
+
+    include if exists <local/steam-executable64_check>
+  }
+
+  include if exists <local/steam-executable64>
+}

@@ -1,0 +1,42 @@
+abi <abi/5.0>,
+
+include <tunables/global>
+
+@{share_dirs} = @{user_share_dirs}/Steam @{HOME}/.steam/debian-installation
+@{steam_library} = @{share_dirs}/steamapps @{MOUNTS}/**/SteamLibrary/steamapps
+@{app_dirs} = @{steam_library}/common
+@{compatdata} = @{steam_library}/compatdata
+@{runtime} = SteamLinuxRuntime SteamLinuxRuntime_sniper SteamLinuxRuntime_soldier SteamLinuxRuntime_4
+@{proton_dirs} = @{app_dirs}/Proton*/ @{share_dirs}/compatibilitytools.d/*/
+@{client_runtime} = @{share_dirs}/steamrt64/pv-runtime/steam-runtime-steamrt
+
+@{exec_path} = @{share_dirs}/bin/hardwareupdater/hardwareupdater.@{arch}
+profile steam-hardware-updater @{share_dirs}/bin/hardwareupdater/hardwareupdater.@{arch} flags=(attach_disconnected, mediate_deleted) {
+  include <abstractions/base>
+  include <abstractions/sys/usb>
+  include <abstractions/devices-u2f>
+
+  network inet stream ip=127.0.0.1,
+
+  owner @{share_dirs}/bin/hardwareupdater/hardwareupdater.@{arch} rmix,
+
+  owner @{share_dirs}/bin/hardwareupdater/hardwareupdater.cfg r,
+
+  /dev/ r,
+
+  owner /tmp/_@{rand9}/ rw,
+  owner /tmp/_@{rand9}/base_library.zip rw,
+  owner /tmp/_@{rand9}/*.so* rwm,
+  owner /tmp/SteamEnvFD@{rand6} rw,
+  owner /tmp/steam_chrome_shmem_uid@{uid}_spid@{pid} rw,
+
+  owner /var/pressure-vessel/ldso/ld.so.cache r,
+
+  @{run}/host@{lib}/gconv/gconv-modules.cache r,
+  @{run}/host/usr/lib/locale/locale-archive r,
+  @{run}/host@{lib}/**.so* rm,
+
+  @{sys}/class/hidraw/ r,
+
+  include if exists <local/steam-hardware-updater>
+}

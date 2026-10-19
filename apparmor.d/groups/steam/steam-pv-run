@@ -1,0 +1,34 @@
+abi <abi/5.0>,
+
+include <tunables/global>
+
+@{share_dirs} = @{user_share_dirs}/Steam @{HOME}/.steam/debian-installation
+@{steam_library} = @{share_dirs}/steamapps @{MOUNTS}/**/SteamLibrary/steamapps
+@{app_dirs} = @{steam_library}/common
+@{compatdata} = @{steam_library}/compatdata
+@{runtime} = SteamLinuxRuntime SteamLinuxRuntime_sniper SteamLinuxRuntime_soldier SteamLinuxRuntime_4
+@{proton_dirs} = @{app_dirs}/Proton*/ @{share_dirs}/compatibilitytools.d/*/
+@{client_runtime} = @{share_dirs}/steamrt64/pv-runtime/steam-runtime-steamrt
+
+@{exec_path} = @{share_dirs}/steamrt64/pv-run.sh
+profile steam-pv-run @{share_dirs}/steamrt64/pv-run.sh {
+  include <abstractions/base>
+  include <abstractions/consoles>
+
+  @{exec_path} r,
+
+  @{sh_path} rix,
+  @{bin}/dirname rix,
+  @{bin}/getopt rix,
+  @{bin}/readlink rix,
+  @{bin}/realpath rix,
+  @{bin}/sed rix,
+  @{bin}/rm rix,
+
+  owner @{share_dirs}/steamrt64/pv-runtime/steam-runtime-steamrt.sh rix,
+  owner @{client_runtime}/pressure-vessel/libexec/steam-runtime-tools-0/srt-client-container rpx,
+
+  owner @{share_dirs}/steamrt64/pv-runtime/** r,
+
+  include if exists <local/steam-pv-run>
+}

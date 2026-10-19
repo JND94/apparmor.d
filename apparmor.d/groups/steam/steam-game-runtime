@@ -1,0 +1,107 @@
+abi <abi/5.0>,
+
+include <tunables/global>
+
+@{share_dirs} = @{user_share_dirs}/Steam @{HOME}/.steam/debian-installation
+@{steam_library} = @{share_dirs}/steamapps @{MOUNTS}/**/SteamLibrary/steamapps
+@{app_dirs} = @{steam_library}/common
+@{compatdata} = @{steam_library}/compatdata
+@{runtime} = SteamLinuxRuntime_sniper SteamLinuxRuntime_soldier SteamLinuxRuntime_4
+@{proton_dirs} = @{app_dirs}/Proton*/ @{share_dirs}/compatibilitytools.d/*/
+@{client_runtime} = @{share_dirs}/steamrt64/pv-runtime/steam-runtime-steamrt
+
+@{exec_path} = @{app_dirs}/@{runtime}/pressure-vessel/bin/pressure-vessel-wrap
+profile steam-game-runtime @{app_dirs}/@{runtime}/pressure-vessel/bin/pressure-vessel-wrap {
+  include <abstractions/base>
+  include <abstractions/audio-client>
+  include <abstractions/bus-session>
+  include <abstractions/nameservice-strict>
+
+  @{exec_path} rm,
+  @{bin}/bwrap rpx -> steam-game-bwrap,
+  @{bin}/ldconfig r,
+
+  owner @{app_dirs}/@{runtime}/pressure-vessel/libexec/steam-runtime-tools-0/srt-bwrap rpx -> steam-game-bwrap,
+  owner @{app_dirs}/@{runtime}/pressure-vessel/libexec/steam-runtime-tools-0/@{multiarch}inspect-library rcx -> inspect-library,
+  owner @{app_dirs}/@{runtime}/pressure-vessel/libexec/steam-runtime-tools-0/@{multiarch}capsule-capture-libs rcx -> capture-libs,
+  owner @{app_dirs}/@{runtime}/pressure-vessel/libexec/steam-runtime-tools-0/@{multiarch}detect-lib rcx -> detect-lib,
+  owner @{app_dirs}/@{runtime}/pressure-vessel/libexec/steam-runtime-tools-0/pv-adverb r,
+
+  owner @{app_dirs}/@{runtime}/pressure-vessel/lib/@{multiarch}/steam-runtime-tools-0/**.so* rm,
+
+  owner @{app_dirs}/@{runtime}/var/tmp-@{rand6}@{lib}/pressure-vessel/from-host/** rwlkm,
+  owner @{app_dirs}/@{runtime}/pressure-vessel/** rwlkm,
+  owner @{app_dirs}/@{runtime}/soldier_platform_2.0.@{int8}.@{int6}/** rwkl,
+
+  owner @{app_dirs}/** r,
+  owner @{app_dirs}/@{runtime}/var/.ref rwk,
+  owner @{app_dirs}/@{runtime}/var/tmp-@{rand6}/{,**} rwlk,
+  owner @{app_dirs}/@{runtime}/var/tmp-@{rand6}@{lib}/** rwlk,
+  owner @{app_dirs}/@{runtime}/pressure-vessel/{,**} r,
+  owner @{app_dirs}/@{runtime}/pressure-vessel/from-host/metadata/*.txt rwk,
+  owner @{app_dirs}/@{runtime}/steamrt4_platform_4.0.@{int8}.@{int6}/{,**} rwk,
+  owner @{app_dirs}/@{runtime}/pressure-vessel/metadata/* rw,
+
+  / r,
+  /usr/share/glvnd/egl_vendor.d/ r,
+  /usr/share/glvnd/egl_vendor.d/*.json r,
+  /usr/share/egl/egl_external_platform.d/ r,
+  /usr/share/egl/egl_external_platform.d/*.json r,
+  /usr/share/vulkan/implicit_layer.d/ r,
+  /usr/share/vulkan/implicit_layer.d/*.json r,
+  /usr/share/vulkan/icd.d/ r,
+  /usr/share/vulkan/icd.d/*.json r,
+
+  owner @{HOME}/ r,
+  owner @{user_share_dirs}/vulkan/implicit_layer.d/  r,
+  owner @{user_share_dirs}/vulkan/implicit_layer.d/*.json r,
+
+  owner @{PROC}/@{pid}/fd/ r,
+
+  owner @{run}/user/@{uid}/ r,
+  owner @{run}/user/@{uid}/xauth_@{rand6} r,
+
+  owner @{tmp}/#@{int} rw,
+  owner @{tmp}/vdpau-drivers-@{rand6}/ rw,
+
+  profile capture-libs {
+    include <abstractions/base>
+
+    owner @{app_dirs}/@{runtime}/pressure-vessel/libexec/steam-runtime-tools-0/@{multiarch}capsule-capture-libs rm,
+
+    @{lib}/ r,
+
+    owner @{app_dirs}/@{runtime}/pressure-vessel/lib/@{multiarch}/steam-runtime-tools-0/{,**} rw,
+    owner @{app_dirs}/@{runtime}/pressure-vessel/lib/@{multiarch}/steam-runtime-tools-0/**.so* m,
+    owner @{share_dirs}/ubuntu12_{32,64}/ r,
+    owner @{share_dirs}/ubuntu12_64/libVkLayer_steam_fossilize.so r,
+    owner @{share_dirs}/ubuntu12_64/steamoverlayvulkanlayer.so r,
+
+    owner @{app_dirs}/@{runtime}/var/tmp-@{rand6}/ r,
+    owner @{app_dirs}/@{runtime}/var/tmp-@{rand6}@{lib}/** rwl,
+    owner @{share_dirs}/ubuntu12_32/*.so r,
+
+    owner @{app_dirs}/@{runtime}/var/tmp-@{rand6}/usr/etc/ld.so.cache r,
+
+    include if exists <local/steam-game-runtime_capture-libs>
+  }
+
+  profile inspect-library {
+    include <abstractions/base>
+
+    owner @{app_dirs}/@{runtime}/pressure-vessel/libexec/steam-runtime-tools-0/@{multiarch}inspect-library rm,
+
+    include if exists <local/steam-game-runtime_inspect-library>
+  }
+
+  profile detect-lib {
+    include <abstractions/base>
+
+    owner @{app_dirs}/@{runtime}/pressure-vessel/libexec/steam-runtime-tools-0/@{multiarch}detect-lib rm,
+    owner @{app_dirs}/@{runtime}/pressure-vessel/libexec/steam-runtime-tools-0/@{multiarch}/lib{,32}/libidentify-lib.so rm,
+
+    include if exists <local/steam-game-runtime_detect-lib>
+  }
+
+  include if exists <local/steam-game-runtime>
+}
