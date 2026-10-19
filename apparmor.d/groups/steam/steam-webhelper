@@ -40,7 +40,7 @@ profile steam-webhelper @{share_dirs}/steamrt64/steamwebhelper flags=(attach_dis
   ptrace (read, trace) peer=steam-client-bwrap//&steam-webhelper,
 
   signal receive set=kill peer=steam-client-bwrap,
-  signal (receive, send) set=term peer=steam-client-bwrap//&steam-webhelper,
+  signal (receive, send) set=(term, kill) peer=steam-client-bwrap//&steam-webhelper,
 
   @{exec_path} rix,
 
@@ -77,11 +77,11 @@ profile steam-webhelper @{share_dirs}/steamrt64/steamwebhelper flags=(attach_dis
   owner @{HOME}/.local/ r,
   owner @{user_share_dirs}/ r,
 
+        /dev/ r,
   @{att}/dev/dri/renderD128 rw,
   owner /dev/shm/ValveIPCSHM_@{uid} rw,
   owner /dev/shm/u@{uid}-ValveIPCSharedObj-Steam rwk,
   owner /dev/shm/u@{uid}-Shm_* rw,
-  owner /tmp/steam_chrome_shmem_uid@{uid}_spid@{pid} rw,
 
   /etc/machine-id r,
 
@@ -113,6 +113,7 @@ profile steam-webhelper @{share_dirs}/steamrt64/steamwebhelper flags=(attach_dis
   owner @{tmp}/dumps/assert_*.dmp rw,
   owner @{tmp}/dumps/ rw,
   owner @{tmp}/dumps/@{user}_log.txt rw,
+  owner @{tmp}/steam_chrome_shmem_uid@{uid}_spid@{pid} rw,
 
         @{PROC}/ r,
         @{PROC}/pressure/cpu r,
