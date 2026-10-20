@@ -39,7 +39,8 @@ profile steam-game-bwrap @{app_dirs}/@{runtime}/pressure-vessel/libexec/steam-ru
   ptrace trace peer=steam-game-bwrap,
   ptrace (read, trace) peer=steam-game-bwrap//&steam-game-proton,
 
-  signal receive set=int peer=steam-srt-launcher-service,
+  signal receive set=(cont, int, kill, term) peer=steam-srt-launcher-service,
+  signal send set=(cont, kill, term) peer=steam-game-bwrap//&steam-game-proton,
 
   @{exec_path} rm,
 
@@ -80,8 +81,7 @@ profile steam-game-bwrap @{app_dirs}/@{runtime}/pressure-vessel/libexec/steam-ru
   owner @{share_dirs}/linux{32,64}/{steamclient,crashhandler}.so rm,
   owner @{share_dirs}/steamclient{,64}.dll r,
   owner @{share_dirs}/GameOverlayRenderer64.dll r,
-  owner @{share_dirs}/legacycompat/SteamService.exe r,
-  owner @{share_dirs}/legacycompat/Steam.dll r,
+  owner @{share_dirs}/legacycompat/* r,
 
   owner /bindfile@{rand6} rw,
 
@@ -115,6 +115,7 @@ profile steam-game-bwrap @{app_dirs}/@{runtime}/pressure-vessel/libexec/steam-ru
         /dev/shm/ r,
   owner /dev/shm/u@{uid}-ValveIPCSharedObj-Steam rwk,
   owner /dev/shm/u@{uid}-Shm_* rw,
+  owner @{att}/dev/shm/ValveIPCSHM_@{uid} rw,
 
   /etc/machine-id r,
 
@@ -122,9 +123,11 @@ profile steam-game-bwrap @{app_dirs}/@{runtime}/pressure-vessel/libexec/steam-ru
   owner @{att}@{run}/user/@{uid}/bus rw,
   owner @{att}@{run}/user/@{uid}/pulse/native rw,
   owner @{att}@{run}/user/@{uid}/wayland-@{int} rw,
+  owner @{att}@{run}/user/@{uid}/pipewire-@{int} rw,
 
         @{run}/host@{lib}/**.so* rm,
         @{run}/host@{lib}/locale/locale-archive r,
+        @{run}/host@{lib}/gconv/gconv-modules r,
         @{run}/host@{lib}/gconv/gconv-modules.cache r,
         @{run}/host/fonts/{,**} r,
         @{run}/host/usr/share/{,**} r,
@@ -138,6 +141,8 @@ profile steam-game-bwrap @{app_dirs}/@{runtime}/pressure-vessel/libexec/steam-ru
         @{PROC}/ r,
         @{PROC}/version r,
         @{PROC}/modules r,
+        @{PROC}/1/status r,
+        @{PROC}/@{pid}/status r,
         @{PROC}/@{pid}/net/dev r,
         @{PROC}/sys/fs/file-max r,
         @{PROC}/uptime r,
@@ -170,9 +175,11 @@ profile steam-game-bwrap @{app_dirs}/@{runtime}/pressure-vessel/libexec/steam-ru
 
   @{sys}/ r,
   @{sys}/kernel/ r,
+  @{sys}/class/hidraw/ r,
   @{sys}/devices/virtual/dmi/id/sys_vendor k,
   @{sys}/devices/virtual/dmi/id/product_name k,
   @{sys}/devices/virtual/net/*/carrier r,
+  @{sys}/devices/@{pci}/net/*/carrier r,
   @{sys}/devices/system/clocksource/clocksource@{int}/current_clocksource r,
   
   include if exists <local/steam-game-bwrap>

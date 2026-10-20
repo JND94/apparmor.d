@@ -34,7 +34,9 @@ profile steam-game-proton @{proton_dirs}proton flags=(attach_disconnected) {
 
   unix type=stream peer=(label=steam-game-bwrap),
 
-  signal (send, receive) set=(usr1,quit) peer=steam-game-bwrap//&steam-game-proton,
+  signal (send, receive) set=(usr1, quit) peer=steam-game-bwrap//&steam-game-proton,
+  signal receive set=(cont, kill) peer=steam-srt-launcher-service,
+  signal receive set=(cont, kill, term) peer=steam-game-bwrap,
 
   ptrace (read, trace) peer=steam-game-bwrap//&steam-game-proton,
 
@@ -54,8 +56,7 @@ profile steam-game-proton @{proton_dirs}proton flags=(attach_disconnected) {
   owner @{share_dirs}/linux{32,64}/{steamclient,crashhandler}.so  rm,
   owner @{share_dirs}/steamclient{,64}.dll          r,
   owner @{share_dirs}/GameOverlayRenderer64.dll     r,
-  owner @{share_dirs}/legacycompat/SteamService.exe r,
-  owner @{share_dirs}/legacycompat/Steam.dll        r,
+  owner @{share_dirs}/legacycompat/* r,
 
   owner @{app_dirs}/ r,
   owner @{app_dirs}/** rwlkm,
@@ -79,9 +80,12 @@ profile steam-game-proton @{proton_dirs}proton flags=(attach_disconnected) {
   owner @{att}@{run}/user/@{uid}/bus rw,
   owner @{att}@{run}/user/@{uid}/wayland-@{int} rw,
   owner @{att}@{run}/user/@{uid}/pulse/native rw,
+  owner @{att}@{run}/user/@{uid}/pipewire-@{int} rw,
 
         @{run}/host@{lib}/**.so* rm,
         @{run}/host@{lib}/os-release r,
+        @{run}/host@{lib}/gconv/gconv-modules r,
+        @{run}/host@{lib}/gconv/gconv-modules.cache r,
         @{run}/host/usr/share/{,**} r,
         @{run}/host/fonts/{,**} r,
         @{run}/host/fonts-cache/@{hex32}-le64.cache-@{int} r,
@@ -107,10 +111,12 @@ profile steam-game-proton @{proton_dirs}proton flags=(attach_disconnected) {
 
   @{sys}/ r,
   @{sys}/kernel/ r,
+  @{sys}/class/hidraw/ r,
   @{sys}/devices/virtual/net/*/carrier r,
+  @{sys}/devices/@{pci}/net/*/carrier r,
   @{sys}/devices/system/clocksource/clocksource@{int}/current_clocksource r,
 
-  profile zenity flags=(complain) {
+  profile zenity flags=(complain ,attach_disconnected) {
     include <abstractions/base>
     include <abstractions/fonts>
     include <abstractions/X-strict>

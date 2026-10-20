@@ -19,8 +19,9 @@ profile steam-srt-launcher-service @{client_runtime}/pressure-vessel/libexec/ste
   unix type=stream addr="@*/bus/steam-launch-wr/",
 
   signal receive set=term peer=steam-srt-client-container,
-  signal send set=int peer=steam-game-bwrap,
-  signal send set=int peer=steam-game-run,
+  signal send set=(cont, int, kill, term) peer=steam-game-bwrap,
+  signal send set=(cont, int, kill, term) peer=steam-game-run,
+  signal send set=(cont, kill) peer=steam-game-bwrap//&steam-game-proton,
 
   @{exec_path} rm,
 

@@ -14,7 +14,7 @@ include <tunables/global>
 profile steam-game-run @{share_dirs}/steamrt64/reaper {
   include <abstractions/base>
 
-  signal receive set=int peer=steam-srt-launcher-service,
+  signal receive set=(cont, int, kill, term) peer=steam-srt-launcher-service,
 
   @{exec_path} rm,
 
