@@ -35,6 +35,8 @@ profile steam-executable64 @{user_share_dirs}/Steam/steamrt64/steam {
   owner @{user_share_dirs}/Steam/steamrt64/pv-run.sh rpx, # steam-pv-run
   owner @{user_share_dirs}/Steam/steam_msg.sh rcx -> zenity,
 
+  owner @{HOME}/.local/ r,
+  owner @{user_share_dirs}/ r,
   owner @{user_share_dirs}/Steam/{,**} rwmk,
 
   / r,
@@ -70,6 +72,8 @@ profile steam-executable64 @{user_share_dirs}/Steam/steamrt64/steam {
   owner @{PROC}/@{pid}/task/ r,
   @{PROC}/version r,
 
+  @{sys}/ r,
+  @{sys}/kernel/ r,
   @{sys}/devices/virtual/dmi/id/sys_vendor k,
   @{sys}/devices/virtual/dmi/id/product_name k,
 

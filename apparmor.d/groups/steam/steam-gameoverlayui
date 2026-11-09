@@ -50,6 +50,7 @@ profile steam-gameoverlayui @{share_dirs}/steamrt64/gameoverlayui flags=(attach_
   owner @{share_dirs}/config/{,**} r,
   owner @{share_dirs}/config/DialogConfigOverlay_*.vdf rw,
   owner @{share_dirs}/public/{,**} r,
+  owner @{share_dirs}/userdata/*/ugcmsgcache/*.cachedmsg w,
 
   owner /dev/shm/u@{uid}-ValveIPCSharedObj-Steam rwk,
   owner /dev/shm/ValveIPCSHM_@{uid} rw,
@@ -77,6 +78,8 @@ profile steam-gameoverlayui @{share_dirs}/steamrt64/gameoverlayui flags=(attach_
   owner @{PROC}/@{pid}/task/ r,
   owner @{PROC}/@{pid}/cmdline r,
   owner @{PROC}/@{pid}/environ r,
+
+  owner @{tmp}/SteamEnvFD@{rand6} rw,
 
   owner /var/pressure-vessel/ldso/ld.so.cache r,
 

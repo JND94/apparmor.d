@@ -30,13 +30,14 @@ profile steam-client-bwrap @{client_runtime}/pressure-vessel/libexec/steam-runti
   include <abstractions/graphics>
   include <abstractions/gtk>
   include <abstractions/gschemas>
+  include <abstractions/icons>
+  include <abstractions/input>
   include <abstractions/nameservice-strict>
   include <abstractions/ssl_certs>
   include <abstractions/sys/sound>
-  include <abstractions/sys/input>
-  include <abstractions/udev/input>
   include <abstractions/X-strict>
   include <abstractions/user-dirs>
+  include <abstractions/uinput>
 
   network inet dgram,
   network inet stream,
@@ -111,18 +112,24 @@ profile steam-client-bwrap @{client_runtime}/pressure-vessel/libexec/steam-runti
   owner @{user_config_dirs}/ r,
   owner @{user_config_dirs}/autostart/ r,
   owner @{user_config_dirs}/pulse/cookie rk,
+  owner @{user_config_dirs}/unity3d/{,**} rwk,
 
   owner @{app_dirs}**/steam_autocloud.vdf rk,
   owner @{app_dirs}/@{runtime}/toolmanifest.vdf rk,
   owner @{share_dirs}/ r,
   owner @{share_dirs}/** rwkm,
+  owner @{user_share_dirs}/ r,
   owner @{user_share_dirs}/icons/default/index.theme r,
   owner @{user_share_dirs}/vulkan/implicit_layer.d/*.json rwk,
+  owner @{user_share_dirs}/icons/hicolor/*/apps/steam_icon_*.png rw,
+  owner @{XDG_DESKTOP_DIR}/*.destkop w,
 
         @{steam_library}/ r,
   owner @{steam_library}/{,**} rwkm,
         @{MOUNTS}/ r,
   owner @{MOUNTS}/**/SteamLibrary/{,**} rwkm,
+
+  owner @{etc_ro}/alsa/conf.d/ r,
 
         /var/tmp/ r,
   owner /var/cache/ldconfig/aux-cache* rw,
@@ -217,6 +224,7 @@ profile steam-client-bwrap @{client_runtime}/pressure-vessel/libexec/steam-runti
   @{sys}/ r,
   @{sys}/class/net/ r,
   @{sys}/class/hidraw/ r,
+  @{sys}/class/power_supply/ r,
   @{sys}/devices/@{pci}/uevent r,
   @{sys}/devices/@{pci}/subsystem_vendor r,
   @{sys}/devices/@{pci}/subsystem_device r,

@@ -46,6 +46,7 @@ profile steam-webhelper @{share_dirs}/steamrt64/steamwebhelper flags=(attach_dis
 
   owner @{share_dirs}/linux32/steamerrorreporter rix,
   owner "@{share_dirs}/config/htmlcache/Default/Site Characteristics Database/@{int6}.log" rw,
+  owner @{share_dirs}/resource/crl-set r,
 
   owner @{share_dirs}/**.so* rm,
   owner @{lib}/@{multiarch}/*.so* rm,

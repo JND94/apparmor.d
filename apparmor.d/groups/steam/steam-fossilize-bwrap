@@ -21,6 +21,7 @@ profile steam-fossilize-bwrap @{app_dirs}/@{runtime}/pressure-vessel/libexec/ste
   include <abstractions/fontconfig-cache-write>
   include <abstractions/graphics>
   include <abstractions/nameservice-strict>
+  include <abstractions/python>
   include <abstractions/sys/dmi-full>
   include <abstractions/sys/input>
   include <abstractions/ssl_certs>
@@ -155,7 +156,7 @@ profile steam-fossilize-bwrap @{app_dirs}/@{runtime}/pressure-vessel/libexec/ste
   @{sys}/devices/platform/LNXPWRBN:00/input/input@{int}/event@{int}/uevent r,
   @{sys}/devices/platform/PNP0C0C:00/input/input@{int}/uevent r,
   @{sys}/devices/platform/PNP0C0C:00/input/input@{int}/event@{int}/uevent r,
-  @{sys}/devices/@{pci}/drm/card@{int}/card1-HDMI-A-1/edid r,
+  @{sys}/devices/@{pci}/drm/card@{int}/card*/edid r,
   @{sys}/class/hidraw/ r,
   @{sys}/class/sound/ r,
   @{sys}/devices/virtual/sound/seq/uevent r,
