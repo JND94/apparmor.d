@@ -134,6 +134,7 @@ profile steam-game-proton @{proton_dirs}proton flags=(attach_disconnected) {
   owner @{run}/host/user-fonts-cache/@{hex32}-le32d4.cache-@{int} r,
   owner @{run}/host/user-share/icons/** r,
   owner @{run}/pressure-vessel/Xauthority r,
+  owner @{run}/user/@{uid}/orcexec.@{rand6} rw,
 
       @{PROC}/ r,
       @{PROC}/1/maps r,
@@ -159,6 +160,7 @@ profile steam-game-proton @{proton_dirs}proton flags=(attach_disconnected) {
 
   owner @{att}@{tmp}/steam_chrome_overlay_uid@{uid}_spid@{pid} rw,
   owner @{tmp}/eac_wine_pid_* rw,
+  owner @{tmp}/orcexec.@{rand6} rw,
 
   owner /var/pressure-vessel/ldso/ld.so.cache r,
 

@@ -171,6 +171,7 @@ profile steam-game-bwrap @{app_dirs}/@{runtime}/pressure-vessel/libexec/steam-ru
   owner @{run}/host/container-manager r, #easyanticheat
   owner @{run}/pressure-vessel/Xauthority r,
   owner @{run}/pressure-vessel/pulse/config r,
+  owner @{run}/user/@{uid}/orcexec.@{rand6} rw,
 
         @{PROC}/ r,
         @{PROC}/version r,
@@ -209,6 +210,7 @@ profile steam-game-bwrap @{app_dirs}/@{runtime}/pressure-vessel/libexec/steam-ru
   owner @{tmp}/pressure-vessel-locales-@{rand6}/{,**} rwl,
   owner @{tmp}/pressure-vessel-libs-@{rand6}/{,**} rw,
   owner @{att}@{tmp}/steam_chrome_overlay_uid@{uid}_spid@{pid} rw, #gameoverlayui
+  owner @{tmp}/orcexec.@{rand6} rw,
 
   owner /var/cache/ldconfig/aux-cache* rw,
   owner /var/pressure-vessel/ldso/new-ld.so.cache* rw,
