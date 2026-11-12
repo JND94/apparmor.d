@@ -76,6 +76,9 @@ profile steam-game-runtime @{app_dirs}/@{runtime}/pressure-vessel/bin/pressure-v
     owner @{share_dirs}/ubuntu12_{32,64}/ r,
     owner @{share_dirs}/ubuntu12_64/libVkLayer_steam_fossilize.so r,
     owner @{share_dirs}/ubuntu12_64/steamoverlayvulkanlayer.so r,
+    owner @{share_dirs}/steamrt{32,64}/ r,
+    owner @{share_dirs}/steamrt{32,64}/steamoverlayvulkanlayer.so r,
+    owner @{share_dirs}/steamrt{32,64}/libVkLayer_steam_fossilize.so r,
 
     owner @{app_dirs}/@{runtime}/var/tmp-@{rand6}/ r,
     owner @{app_dirs}/@{runtime}/var/tmp-@{rand6}@{lib}/** rwl,

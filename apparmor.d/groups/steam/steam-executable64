@@ -13,8 +13,11 @@ include <tunables/global>
 @{exec_path} = @{user_share_dirs}/Steam/steamrt64/steam
 profile steam-executable64 @{user_share_dirs}/Steam/steamrt64/steam {
   include <abstractions/base>
+  include <abstractions/bus-session>
+  include <abstractions/bus-system>
   include <abstractions/consoles>
   include <abstractions/graphics>
+  include <abstractions/icons>
   include <abstractions/nameservice-strict>
   include <abstractions/ssl_certs>
   include <abstractions/sys/dmi>

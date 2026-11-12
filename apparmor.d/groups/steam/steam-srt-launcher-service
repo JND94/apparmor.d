@@ -40,6 +40,7 @@ profile steam-srt-launcher-service @{client_runtime}/pressure-vessel/libexec/ste
   owner @{share_dirs}/steamrt64/steam-launch-wrapper rmix,
   owner @{share_dirs}/steamrt64/reaper rpx, #steam-game-run
   owner @{client_runtime}/pressure-vessel/bin/steam-runtime-supervisor rix,
+  owner @{client_runtime}/pressure-vessel/libexec/steam-runtime-tools-0/@{multiarch}exec rix,
 
   owner @{client_runtime}/pressure-vessel/lib/@{multiarch}/steam-runtime-tools-0/**.so* rm,
 

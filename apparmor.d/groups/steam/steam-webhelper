@@ -69,6 +69,10 @@ profile steam-webhelper @{share_dirs}/steamrt64/steamwebhelper flags=(attach_dis
   owner @{share_dirs}/ubuntu12_64/locales/*.pak r,
   owner @{share_dirs}/public/steam_tray_posix.tga rk,
   owner @{share_dirs}/userdata/** r,
+  owner @{share_dirs}/public/steam_tray_posix.png rk,
+  owner @{share_dirs}/steamrt64/chrome*.pak r,
+  owner @{share_dirs}/steamrt64/locales/*.pak r,
+  owner @{share_dirs}/steamrt64/.cef-dev-tools-size.vdf rw,
 
   owner @{run}/pressure-vessel/pulse/config rk,
 

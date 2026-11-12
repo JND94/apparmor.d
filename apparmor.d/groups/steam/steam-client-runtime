@@ -62,6 +62,8 @@ profile steam-client-runtime @{client_runtime}/pressure-vessel/bin/pressure-vess
     owner @{client_runtime}/var/tmp-@{rand6}@{lib}/pressure-vessel/overrides/lib/@{multiarch}/** rw,
     owner @{share_dirs}/ubuntu12_{32,64}/ r,
     owner @{share_dirs}/ubuntu12_{32,64}/**.so* r,
+    owner @{share_dirs}/steamrt{32,64}/ r,
+    owner @{share_dirs}/steamrt{32,64}/**.so* r,
 
     include if exists <local/steam-client-runtime_capture-libs>
   }

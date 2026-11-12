@@ -53,7 +53,7 @@ profile steam-client-bwrap @{client_runtime}/pressure-vessel/libexec/steam-runti
   @{sh_path}  rix,
   @{bin}/true rix,
 
-  owner @{bin}/lsof rix,
+  @{bin}/lsof rix,
   owner @{share_dirs}/steamrt64/steam rix, #nnp - stacked?
   owner @{bin}/steam-runtime-launch-client rix, #nnp - stacked?
   owner @{bin}/dirname rix,
@@ -177,6 +177,8 @@ profile steam-client-bwrap @{client_runtime}/pressure-vessel/libexec/steam-runti
   owner @{run}/host/user-fonts-cache/@{hex32}-le64.cache-@{int} r,
   owner @{run}/pressure-vessel/Xauthority r,
   owner @{run}/pressure-vessel/pulse/config r,
+  owner @{run}/host/root@{user_share_dirs}/vulkan/implicit_layer.d/steamoverlay_@{arch}.json rwk,
+  owner @{run}/host/root@{user_share_dirs}/vulkan/implicit_layer.d/steamfossilize_@{arch}.json rwk,
 
   @{run}/udev/data/n2 r,
   @{run}/udev/data/n3 r,

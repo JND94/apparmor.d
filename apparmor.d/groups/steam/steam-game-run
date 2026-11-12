@@ -11,7 +11,7 @@ include <tunables/global>
 @{client_runtime} = @{share_dirs}/steamrt64/pv-runtime/steam-runtime-steamrt
 
 @{exec_path} = @{share_dirs}/steamrt64/reaper
-profile steam-game-run @{share_dirs}/steamrt64/reaper {
+profile steam-game-run @{share_dirs}/steamrt64/reaper flags=(attach_disconnected) {
   include <abstractions/base>
 
   signal receive set=(cont, int, kill, term) peer=steam-srt-launcher-service,

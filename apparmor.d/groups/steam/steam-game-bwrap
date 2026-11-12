@@ -79,6 +79,8 @@ profile steam-game-bwrap @{app_dirs}/@{runtime}/pressure-vessel/libexec/steam-ru
   owner @{app_dirs}/SteamLinuxRuntime/steam-runtime@{lib}/@{multiarch}/*.so* m, #steamerrorreporter
   owner @{share_dirs}/steamrt{32,64}/gameoverlayrenderer.so rm,
   owner @{share_dirs}/ubuntu12_{32,64}/steamoverlayvulkanlayer.so rm,
+  owner @{share_dirs}/steamrt{32,64}/steamoverlayvulkanlayer.so r,
+  owner @{share_dirs}/steamrt{32,64}/libVkLayer_steam_fossilize.so r,
   owner @{share_dirs}/linux{32,64}/{steamclient,crashhandler}.so rm,
   owner @{share_dirs}/steamclient{,64}.dll r,
   owner @{share_dirs}/GameOverlayRenderer64.dll r,
