@@ -116,7 +116,7 @@ profile steam-client-bwrap @{client_runtime}/pressure-vessel/libexec/steam-runti
 
   owner @{app_dirs}**/steam_autocloud.vdf rk,
   owner @{app_dirs}/@{runtime}/toolmanifest.vdf rk,
-  owner @{share_dirs}/ r,
+  owner @{share_dirs}/ rk,
   owner @{share_dirs}/** rwkm,
   owner @{user_share_dirs}/ r,
   owner @{user_share_dirs}/icons/default/index.theme r,
