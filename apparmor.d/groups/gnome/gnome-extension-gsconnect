@@ -6,6 +6,7 @@ abi <abi/5.0>,
 
 include <tunables/global>
 
+@{domain} = org.gnome.Shell.Extensions.GSConnect
 @{share_dirs}  = /usr/share/gnome-shell/extensions/gsconnect@andyholmes.github.io
 @{share_dirs} += @{user_share_dirs}/gnome-shell/extensions/gsconnect@andyholmes.github.io
 @{path} = /org/gnome/Shell/Extensions/GSConnect
@@ -14,7 +15,6 @@ include <tunables/global>
 profile gnome-extension-gsconnect @{exec_path} flags=(attach_disconnected) {
   include <abstractions/base>
   include <abstractions/audio-client>
-  include <abstractions/bus/session/org.freedesktop.FileManager1>
   include <abstractions/bus/session/org.freedesktop.FileManager1>
   include <abstractions/bus/session/org.gtk.vfs.Daemon>
   include <abstractions/bus/session/org.gtk.vfs.MountOperation>
@@ -82,7 +82,7 @@ profile gnome-extension-gsconnect @{exec_path} flags=(attach_disconnected) {
   @{share_dirs}/{,**} r,
   @{share_dirs}/gsconnect-preferences rix,
 
-  /snap/*/@{uid}/**.@{icon_ext} r,
+  @{snap}/*/@{uid}/**.@{icon_ext} r,
   /usr/share/**.@{icon_ext} r,
   /var/lib/flatpak/appstream/**/icons/{,**} r,
 
@@ -97,6 +97,7 @@ profile gnome-extension-gsconnect @{exec_path} flags=(attach_disconnected) {
   owner @{HOME}/.var/app/*/**.@{icon_ext} r,
 
   owner @{tmp}/.org.chromium.Chromium.@{rand6} r,
+  owner @{tmp}/org.chromium.Chromium.scoped_dir.@{rand6}/* r,
 
   owner @{run}/user/@{uid}/app/*/.org.chromium.Chromium.@{rand6} r,
   owner @{run}/user/@{uid}/gcr/ssh rw,
@@ -111,8 +112,6 @@ profile gnome-extension-gsconnect @{exec_path} flags=(attach_disconnected) {
   owner @{PROC}/@{pid}/stat r,
   owner @{PROC}/@{pid}/statm r,
   owner @{PROC}/@{pid}/task/@{tid}/stat r,
-
-  deny @{user_share_dirs}/gvfs-metadata/* r,
 
   include if exists <local/gnome-extension-gsconnect>
 }
