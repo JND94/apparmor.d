@@ -1,28 +1,24 @@
-# apparmor.d - Full set of apparmor profiles
-# Copyright (C) 2024 Alexandre Pujol <alexandre@pujol.io>
-# SPDX-License-Identifier: GPL-2.0-only
-
 abi <abi/5.0>,
 
 include <tunables/global>
 
-@{runtime} = SteamLinuxRuntime_{sniper,soldier}
 @{share_dirs} = @{user_share_dirs}/Steam @{HOME}/.steam/debian-installation
-@{lib_dirs} = @{share_dirs}/ubuntu@{int2}_{32,64} @{share_dirs}/linux{32,64}
-@{runtime_dirs} = @{lib_dirs}/steam-runtime{,-sniper}
-@{app_dirs} = @{share_dirs}/steamapps/common/
+@{steam_library} = @{share_dirs}/steamapps @{MOUNTS}/**/SteamLibrary/steamapps
+@{app_dirs} = @{steam_library}/common
+@{compatdata} = @{steam_library}/compatdata
+@{runtime} = SteamLinuxRuntime SteamLinuxRuntime_sniper SteamLinuxRuntime_soldier SteamLinuxRuntime_4
+@{proton_dirs} = @{app_dirs}/Proton*/ @{share_dirs}/compatibilitytools.d/*/
+@{client_runtime} = @{share_dirs}/steamrt64/pv-runtime/steam-runtime-steamrt
 
-@{exec_path} = @{runtime_dirs}/@{arch}/@{bin}/steam-runtime-steam-remote
-profile steam-runtime-steam-remote @{exec_path} flags=(attach_disconnected,complain) {
+@{exec_path} = @{client_runtime}/pressure-vessel/bin/steam-runtime-steam-remote
+profile steam-runtime-steam-remote @{client_runtime}/pressure-vessel/bin/steam-runtime-steam-remote {
   include <abstractions/base>
 
   @{exec_path} mr,
 
-  @{runtime_dirs}/** mr,
+  owner @{client_runtime}/pressure-vessel/lib/@{multiarch}/steam-runtime-tools-0/** rm,
 
   owner @{HOME}/.steam/steam.pipe rw,
 
   include if exists <local/steam-runtime-steam-remote>
 }
-
-# vim:syntax=apparmor

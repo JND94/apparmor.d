@@ -1,110 +1,261 @@
-# apparmor.d - Full set of apparmor profiles
-# Copyright (C) 2024 Alexandre Pujol <alexandre@pujol.io>
-# SPDX-License-Identifier: GPL-2.0-only
-
 abi <abi/5.0>,
 
 include <tunables/global>
 
-@{runtime_name} = sniper soldier
-@{runtime} = SteamLinuxRuntime_@{runtime_name}
 @{share_dirs} = @{user_share_dirs}/Steam @{HOME}/.steam/debian-installation
-@{lib_dirs} = @{share_dirs}/ubuntu@{int2}_{32,64} @{share_dirs}/linux{32,64}
-@{runtime_dirs} = @{lib_dirs}/steam-runtime{,-sniper}
-@{app_dirs} = @{share_dirs}/steamapps/common/
+@{steam_library} = @{share_dirs}/steamapps @{MOUNTS}/**/SteamLibrary/steamapps
+@{app_dirs} = @{steam_library}/common
+@{compatdata} = @{steam_library}/compatdata
+@{runtime} = SteamLinuxRuntime SteamLinuxRuntime_sniper SteamLinuxRuntime_soldier SteamLinuxRuntime_4
+@{proton_dirs} = @{app_dirs}/Proton*/ @{share_dirs}/compatibilitytools.d/*/
+@{client_runtime} = @{share_dirs}/steamrt64/pv-runtime/steam-runtime-steamrt
 
-@{exec_path} = @{app_dirs}/@{runtime}/pressure-vessel/@{lib}/steam-runtime-tools-@{int}/srt-bwrap
-profile steam-game-proton @{exec_path} flags=(attach_disconnected,complain) {
+@{exec_path} = @{proton_dirs}proton
+profile steam-game-proton @{proton_dirs}proton flags=(attach_disconnected) {
   include <abstractions/base>
-  include <abstractions/bwrap>
-  include <abstractions/common/steam-game>
+  include <abstractions/audio-client>
+  include <abstractions/devices-usb-read>
+  include <abstractions/fonts>
+  include <abstractions/fontconfig-cache-write>
+  include <abstractions/graphics>
+  include <abstractions/icons>
+  include <abstractions/input>
   include <abstractions/python>
+  include <abstractions/nameservice-strict>
+  include <abstractions/ssl_certs>
+  include <abstractions/sys/dmi-full>
+  include <abstractions/wayland>
   include <abstractions/wine>
-
-  capability dac_override,
-  capability dac_read_search,
+  include <abstractions/X-strict>
 
   network inet dgram,
-  network inet6 dgram,
   network inet stream,
+  network inet6 dgram,
   network inet6 stream,
-  network unix stream,
+  network netlink raw,
 
-  signal receive peer=steam,
-  unix,
+  unix type=dgram peer=(label=steam-game-bwrap),
+  unix type=stream peer=(label=steam-game-bwrap),
 
-  @{exec_path} mr,
-  @{bin}/bwrap mrix,
+  signal (send, receive) set=(abrt,kill,usr1,stop,quit) peer=steam-game-bwrap//&steam-game-proton,
+  signal receive set=(cont,kill) peer=steam-srt-launcher-service,
+  signal receive set=(cont,kill,term) peer=steam-game-bwrap,
 
-  @{sh_path}                                            rix,
-  @{bin}/cat                                            rix,
-  @{bin}/env                                            rix,
-  @{bin}/chmod                                          rix,
-  @{bin}/fc-match                                       rix,
-  @{bin}/getopt                                         rix,
-  @{bin}/gzip                                           rix,
-  @{sbin}/ldconfig                                      rix,
-  @{bin}/ln                                             rix,
-  @{bin}/localedef                                      rix,
-  @{bin}/mkdir                                          rix,
-  @{bin}/readlink                                       rix,
-  @{bin}/rm                                             rix,
-  @{bin}/steam-runtime-launcher-interface-@{int}        rix,
-  @{bin}/steam-runtime-system-info                      rix,
-  @{bin}/steam-runtime-urlopen                          rix,
-  @{bin}/true                                           rix,
-  @{python_path}                                        rix,
-  @{open_path}                                          rix,
+  ptrace read peer=steam-game-bwrap,
+  ptrace (read, trace) peer=steam-game-bwrap//&steam-game-proton,
 
-  @{lib_dirs}/**                                         mr,
-  @{lib}/pressure-vessel/from-host/@{bin}/*             rix,
-  @{lib}/pressure-vessel/from-host/@{lib}/**            rix,
-  @{lib}/steam-runtime-tools-@{int}/@{multiarch}-*      rix,
+  @{exec_path} r,
 
-  # TODO stack with steam ? rpx -> steam-game-proton&//steam,
-  @{runtime_dirs}/run.sh rix,
-  @{runtime_dirs}/@{arch}@{bin}/steam-runtime-identify-library-abi rix,
-  @{runtime_dirs}/@{arch}@{bin}/steam-runtime-launcher-interface-@{int} rix,
-  @{app_dirs}/SteamLinuxRuntime/var/steam-runtime/run.sh rix,
-  @{app_dirs}/SteamLinuxRuntime/var/steam-runtime/@{arch}@{bin}/steam-runtime-identify-library-abi rix,
-  @{app_dirs}/SteamLinuxRuntime/var/steam-runtime/@{arch}@{bin}/steam-runtime-launcher-interface-@{int} rix,
+  owner @{python_path} rix,
+  owner @{bin}/env       r,
 
-  @{app_dirs}/**                                        mrix,
+  owner @{bin}/steam-runtime-launcher-interface-0 rix,
 
-  @{run}/host/@{sbin}/ldconfig                           rix,
-  @{run}/host/@{bin}/localedef                          rix,
-  @{run}/host/@{lib}/**                                  mr,
+  owner @{proton_dirs}files/bin/wineserver          ix,
+  owner @{proton_dirs}files/lib/wine/@{arch}-unix/* ix,
+  owner @{proton_dirs}protonfixes/files/bin/zenity rcx -> zenity,
+  owner "@{app_dirs}/Steamworks Shared/_CommonRedist/**" rix,
 
-  @{share_dirs}/bin/d3ddriverquery64.exe                 mr,
-  @{share_dirs}/steamapps/compatdata/@{int}/pfx/**       mr,
+  owner @{share_dirs}/ubuntu12_{32,64}/steamoverlayvulkanlayer.so rm,
+  owner @{share_dirs}/steamrt{32,64}/gameoverlayrenderer.so       rm,
+  owner @{share_dirs}/steamrt{32,64}/steamoverlayvulkanlayer.so r,
+  owner @{share_dirs}/steamrt{32,64}/libVkLayer_steam_fossilize.so r,
+  owner @{share_dirs}/linux{32,64}/{steamclient,crashhandler}.so  rm,
+  owner @{share_dirs}/steamclient{,64}.dll          r,
+  owner @{share_dirs}/GameOverlayRenderer64.dll     r,
+  owner @{share_dirs}/legacycompat/* r,
 
-  @{user_games_dirs}/**                                  mr,
+  owner @{app_dirs}/ r,
+  owner @{app_dirs}/** rwlkm,
+  owner @{proton_dirs} r,
+  owner @{proton_dirs}** rwkm,
+  owner @{compatdata}/*/** rwlkm,
 
-  owner /bindfile@{rand6} rw,
-
-  owner /var/pressure-vessel/** rw,
-
-  owner "@{app_dirs}/Steamworks Shared/runasadmin.vdf" rw,
-  owner @{app_dirs}/@{runtime}/var/tmp-@{rand6}/usr/.ref rwk,
-  owner @{app_dirs}/SteamLinuxRuntime/var/steam-runtime/* rw,
-  owner @{app_dirs}/Proton*/** rwlk,
-
-  owner @{share_dirs}/bin/ r,
+  owner @{share_dirs}/ r,
   owner @{share_dirs}/installscriptevalutor_log.txt rw,
-  owner @{share_dirs}/legacycompat/ r,
-  owner @{share_dirs}/legacycompat/** mr,
-  owner @{share_dirs}/steamapps/compatdata/{,**} rwk,
+  owner @{share_dirs}/appcache/ r,
+  owner @{share_dirs}/appcache/*.vdf rk,
+  owner @{share_dirs}/appcache/httpcache/{,**} r,
+  owner @{share_dirs}/standalone_installscript_progress_*.vdf rw,
+  owner @{share_dirs}/config/ r,
+  owner @{share_dirs}/config/config.vdf.async@{pid}.tmp rw,
+  owner @{share_dirs}/config/config.vdf rwk,
+  owner @{share_dirs}/logs/*.txt rwk,
+  owner @{share_dirs}/userdata/ r,
+  owner @{share_dirs}/userdata/*/*gcache/{,**} rw,
+  owner @{share_dirs}/userdata/*/*/local/ r,
+  owner @{share_dirs}/userdata/*/*/local/** rw,
+  owner @{share_dirs}/appcache/librarycache/** r,
 
-  owner @{tmp}/glx-icds-@{rand6}/{,**} w,
-  owner @{tmp}/pressure-vessel-*-@{rand6}/ rw,
-  owner @{tmp}/pressure-vessel-*-@{rand6}/** rwlk -> @{tmp}/pressure-vessel-*-@{rand6}/**,
-  owner @{tmp}/vdpau-drivers-@{rand6}/{,**} w,
+  owner @{steam_lirary}/ r,
+  owner @{steam_library}/appmanifest_*.acf r,
 
-  @{run}/host/share/{,**} r,
+  owner @{user_share_dirs}/ r,
+  owner @{user_cache_dirs}/ r,
+  owner @{user_cache_dirs}/protonfixes/ rw,
+  owner @{user_cache_dirs}/protonfixes/** rwk,
+  owner @{user_config_dirs}/vkBasalt/vkBasalt.conf r,
+  owner @{user_config_dirs}/MangoHud/MangoHud.conf r,
 
-  @{PROC}/@{pids}/net/* r,
+  owner /        r,
+          /home/ r,
+  owner @{HOME}/ r,
+  owner @{HOME}/.local/ r,
+  owner @{HOME}/.steam/steam.pid r,
+  owner /usr/ r,
+  owner /usr/local/ r,
+  owner /usr/share/ r,
+  owner /usr/local/share/ r,
 
+        /dev/ r,
+  owner /dev/shm/u@{uid}-ValveIPCSharedObj-Steam rwk,
+  owner /dev/shm/u@{uid}-Shm_* rw,
+  owner @{att}/dev/shm/ValveIPCSHM_@{uid} rw,
+        @{att}/dev/dri/renderD128 rw,
+
+  /etc/machine-id r,
+
+        @{att}@{run}/dbus/system_bus_socket rw,
+  owner @{att}@{run}/user/@{uid}/bus rw,
+  owner @{att}@{run}/user/@{uid}/wayland-@{int} rw,
+  owner @{att}@{run}/user/@{uid}/pulse/native rw,
+  owner @{att}@{run}/user/@{uid}/pipewire-@{int} rw,
+
+        @{run}/host@{lib}/**.so* rm,
+        @{run}/host@{lib}/os-release r,
+        @{run}/host@{lib}/gconv/gconv-modules r,
+        @{run}/host@{lib}/gconv/gconv-modules.cache r,
+        @{run}/host/usr/share/{,**} r,
+        @{run}/host/share/icons/** r,
+        @{run}/host/fonts/{,**} r,
+        @{run}/host/fonts-cache/@{hex32}-le64.cache-@{int} r,
+        @{run}/host/fonts-cache/@{hex32}-le32d4.cache-@{int} r,
+        @{run}/host/os-release r,
+  owner @{run}/host/container-manager r, #easyanticheat
+  owner @{run}/host/user-fonts-cache/@{hex32}-le64.cache-@{int} r,
+  owner @{run}/host/user-fonts-cache/@{hex32}-le32d4.cache-@{int} r,
+  owner @{run}/host/user-share/icons/** r,
+  owner @{run}/pressure-vessel/Xauthority r,
+  owner @{run}/user/@{uid}/orcexec.@{rand6} rw,
+
+      @{PROC}/ r,
+      @{PROC}/1/maps r,
+      @{PROC}/@{pid}/maps r,
+      @{PROC}/@{pid}/net/ipv6_route r,
+      @{PROC}/@{pid}/net/route r,
+      @{PROC}/@{pid}/comm r,
+      @{PROC}/@{pid}/cmdline r,
+      @{PROC}/bus/pci/devices r,
+  owner @{PROC}/@{pid}/comm r,
+  owner @{PROC}/@{pid}/pagemap r,
+  owner @{PROC}/@{pid}/mounts r,
+  owner @{PROC}/@{pid}/stat r,
+  owner @{PROC}/@{pid}/task/ r,
+  owner @{PROC}/@{pid}/task/@{tid}/comm w,
+  owner @{PROC}/@{pid}/task/@{tid}/stat r,
+  owner @{PROC}/@{pid}/uid_map r,
+        @{PROC}/modules r,
+        @{PROC}/@{pid}/net/dev r,
+        @{PROC}/sys/fs/file-max r,
+        @{PROC}/uptime r,
+        @{PROC}/version r,
+
+  owner @{att}@{tmp}/steam_chrome_overlay_uid@{uid}_spid@{pid} rw,
+  owner @{tmp}/eac_wine_pid_* rw,
+  owner @{tmp}/orcexec.@{rand6} rw,
+  owner @{tmp}/protonfixes.log
+
+  owner /var/pressure-vessel/ldso/ld.so.cache r,
+
+  @{sys}/ r,
+  @{sys}/bus/ r,
+  @{sys}/bus/usb/devices/ r,
+  @{sys}/kernel/ r,
+  @{sys}/class/input/ r,
+  @{sys}/class/net/ r,
+  @{sys}/class/hidraw/ r,
+  @{sys}/class/power_supply/ r,
+  @{sys}/devices/virtual/net/*/carrier r,
+  @{sys}/devices/@{pci}/net/*/carrier r,
+  @{sys}/devices/system/clocksource/clocksource@{int}/current_clocksource r,
+  @{sys}/devices/virtual/input/mice/uevent r,
+  @{sys}/devices/@{pci}/usb@{int}/*/bcdDevice r,
+  @{sys}/devices/@{pci}/usb@{int}/*/*/bInterfaceNumber r,
+  @{sys}/devices/@{pci}/usb@{int}/*/busnum r,
+  @{sys}/devices/@{pci}/usb@{int}/*/devnum r,
+  @{sys}/devices/@{pci}/usb@{int}/*/manufacturer r,
+  @{sys}/devices/@{pci}/usb@{int}/*/product r,
+  @{sys}/devices/@{pci}/usb@{int}/*/serial r,
+  @{sys}/devices/@{pci}/usb@{int}/*/*/*/report_descriptor r,
+  @{sys}/devices/@{pci}/usb@{int}/*/*/*/input/input@{int}/capabilities/ev r,
+  @{sys}/devices/@{pci}/usb@{int}/*/*/*/input/input@{int}/ r,
+  @{sys}/devices/@{pci}/sound/card@{int}/input@{int}/properties r,
+  @{sys}/devices/@{pci}/sound/card@{int}/input@{int}/capabilities/ev r,
+  @{sys}/devices/@{pci}/sound/card@{int}/input@{int}/capabilities/abs r,
+  @{sys}/devices/@{pci}/sound/card@{int}/input@{int}/capabilities/key r,
+  @{sys}/devices/@{pci}/sound/card@{int}/input@{int}/capabilities/rel r,
+  @{sys}/devices/@{pci}/sound/card@{int}/input@{int}/ r,
+  @{sys}/devices/@{pci}/drm/card@{int}/*/edid r,
+  @{sys}/devices/platform/*/uevent r,
+  @{sys}/devices/platform/*/input/input@{int}/ r,
+  @{sys}/devices/platform/*/input/input@{int}/event@{int}/uevent r,
+  @{sys}/devices/platform/*/input/input@{int}/uevent r,
+  @{sys}/devices/platform/pcspkr/uevent r,
+  @{sys}/devices/platform/pcspkr/input/input@{int}/capabilities/ev r,
+  @{sys}/devices/platform/pcspkr/input/input@{int}/capabilities/abs r,
+  @{sys}/devices/platform/pcspkr/input/input@{int}/properties r,
+  @{sys}/devices/platform/pcspkr/input/input@{int}/capabilities/rel r,
+  @{sys}/devices/platform/pcspkr/input/input@{int}/capabilities/key r,
+  @{sys}/devices/platform/uevent r,
+  @{sys}/devices/@{pci}/net/*/address r,
+  @{sys}/devices/virtual/net/lo/ r,
+  @{sys}/devices/virtual/input/**/uevent r,
+  @{sys}/devices/virtual/input/ r,
+  @{sys}/devices/virtual/input/input@{int}/ r,
+  @{sys}/devices/virtual/input/input@{int}/capabilities/ev r,
+  @{sys}/devices/virtual/input/input@{int}/properties r,
+  @{sys}/devices/virtual/input/input@{int}/capabilities/abs r,
+  @{sys}/devices/virtual/input/input@{int}/capabilities/rel r,
+  @{sys}/devices/virtual/input/input@{int}/capabilities/key r,
+
+  #MangoHUD
+  @{sys}/class/hwmon/ r,
+  @{sys}/class/thermal/ r,
+  @{sys}/devices/@{pci}/gpu_busy_percent r,
+  @{sys}/devices/@{pci}/mem_info_vram_total r,
+  @{sys}/devices/@{pci}/mem_info_vram_used r,
+  @{sys}/devices/@{pci}/mem_info_gtt_used r,
+  @{sys}/devices/@{pci}/hwmon/ r,
+  @{sys}/devices/system/cpu/cpufreq/policy@{int}/scaling_governor r,
+  @{sys}/devices/@{pci}/hwmon/hwmon@{int}/temp@{int}_input r,
+  @{sys}/devices/@{pci}/hwmon/hwmon@{int}/freq@{int}_input r,
+  @{sys}/devices/@{pci}/hwmon/hwmon@{int}/in@{int}_input r,
+  @{sys}/devices/@{pci}/hwmon/hwmon@{int}/power@{int}_average r,
+  @{sys}/devices/@{pci}/hwmon/hwmon@{int}/power@{int}_cap r,
+  @{sys}/devices/@{pci}/hwmon/hwmon@{int}/fan@{int}_input r,
+  @{sys}/devices/@{pci}/hwmon/hwmon@{int}/temp@{int}_label r,
+  @{sys}/devices/virtual/thermal/thermal_zone@{int}/hwmon@{int}/name r,
+  @{sys}/devices/@{pci}/hwmon/hwmon@{int}/ r,
+  @{sys}/devices/@{pci}/hwmon/hwmon@{int}/name r,
+  @{sys}/devices/platform/*/hwmon/hwmon@{int}/name r,
+  @{sys}/devices/virtual/thermal/thermal_zone@{int}/type r,
+  @{sys}/devices/@{pci}/nvme/nvme@{int}/hwmon@{int}/name r,
+  owner @{PROC}/@{pid}/fd/ r,
+  owner @{PROC}/@{pid}/fdinfo/@{int} r,
+
+  profile zenity flags=(complain ,attach_disconnected) {
+    include <abstractions/base>
+    include <abstractions/fonts>
+    include <abstractions/X-strict>
+
+    owner @{proton_dirs}protonfixes/files/bin/zenity r,
+
+    owner @{run}/user/@{uid}/wayland-@{int} rw,
+    owner @{run}/pressure-vessel/Xauthority r,
+
+    @{run}/host/fonts/{,**} r,
+
+
+  }
   include if exists <local/steam-game-proton>
 }
-
-# vim:syntax=apparmor

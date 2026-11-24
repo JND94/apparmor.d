@@ -1,0 +1,63 @@
+abi <abi/5.0>,
+
+include <tunables/global>
+
+@{exec_path} = @{bin}/kwi
+profile kwi @{bin}/kwi {
+  include <abstractions/base>
+  include <abstractions/bus-session>
+  include <abstractions/consoles>
+  include <abstractions/graphics>
+  include <abstractions/fonts>
+  include <abstractions/fontconfig-cache-write>
+  include <abstractions/icons>
+  include <abstractions/kde-base>
+  include <abstractions/mime>
+  include <abstractions/nameservice-strict>
+  include <abstractions/wayland-strict>
+
+  ptrace read,
+
+  signal send,
+
+  @{shells_path} ux,
+  @{bin}/ r,
+
+  /dev/ptmx rw,
+
+  /usr/share/kwi/{,**} r,
+  /usr/share/color-schemes/{,**} r,
+  /usr/share/kf6/searchproviders/{,**} r,
+
+  /etc/shells r,
+  /etc/xdg/menus/ r,
+
+  owner @{user_cache_dirs}/kwi/ r,
+  owner @{user_cache_dirs}/kwi/** rwlk,
+  owner @{user_cache_dirs}/ksycoca6* rw,
+  owner @{user_cache_dirs}/ksycoca6*.lock k,
+  owner @{user_cache_dirs}/union/* rwl,
+
+  owner @{user_config_dirs}/kwiterminalrc rw,
+  owner @{user_config_dirs}/kuriikwsfilterrc r,
+  owner @{user_config_dirs}/menus/ r,
+  owner @{user_config_dirs}/menus/applications-merged/ r,
+
+  owner @{user_share_dirs}/color-schemes/{,**} r,
+  owner @{user_share_dirs}/kwi/{,**} rw,
+  owner @{user_share_dirs}/konsole/ r,
+  owner @{user_share_dirs}/recently-used.xbel.lock rw,
+
+  owner @{user_state_dirs}/#@{int8} rw,
+  owner @{user_state_dirs}/kwistaterc.lock rwk,
+  owner @{user_state_dirs}/kwistaterc rwl -> @{user_state_dirs}/#@{int8},
+  owner @{user_state_dirs}/kwistaterc.@{rand6} rwl -> @{user_state_dirs}/#@{int8},
+
+  @{run}/mount/utab r,
+
+        @{PROC}/ r,
+        @{PROC}/@{pid}/cmdline r,
+  owner @{PROC}/@{pid}/mountinfo r,
+
+  include if exists <local/kwi>
+}

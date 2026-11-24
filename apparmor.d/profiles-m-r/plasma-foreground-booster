@@ -1,0 +1,61 @@
+abi <abi/5.0>,
+
+include <tunables/global>
+
+@{exec_path} = @{bin}/foreground_booster
+profile plasma-foreground-booster @{bin}/foreground_booster {
+  include <abstractions/base>
+  include <abstractions/bus-system>
+  include <abstractions/bus-session>
+  include <abstractions/mime>
+  include <abstractions/icons>
+  include <abstractions/nameservice-strict>
+  include <abstractions/fonts>
+  include <abstractions/wayland-strict>
+  include <abstractions/X-strict>
+
+  capability sys_ptrace,
+
+  ptrace read,
+
+  /dev/tty r,
+
+        @{sys}/fs/cgroup/dmem.capacity r,
+  owner @{sys}/fs/cgroup/user.slice/user-@{uid}.slice/user@@{uid}.service/app.slice/**/dmem.low w,
+  owner @{sys}/fs/cgroup/user.slice/user-@{uid}.slice/user@@{uid}.service/session.slice/**/dmem.low w,
+  owner @{sys}/fs/cgroup/user.slice/user-@{uid}.slice/user@@{uid}.service/background.slice/**/dmem.low w,
+
+  owner @{PROC}/@{pid}/cmdline r,
+  owner @{PROC}/@{pid}/environ r,
+        @{PROC}/@{pid}/stat r,
+  owner @{PROC}/@{pid}/stat r,
+  owner @{PROC}/@{pid}/mountinfo r,
+  owner @{PROC}/@{pid}/mounts r,
+        @{PROC}/@{pid}/cmdline r,
+
+  /etc/machine-id r,
+
+  owner @{user_config_dirs}/kdedefaults/kdeglobals r,
+  owner @{user_config_dirs}/kdeglobals r,
+  owner @{user_config_dirs}/menus/ r,
+  owner @{user_config_dirs}/menus/applications-kmenuedit.menu r,
+  owner @{user_config_dirs}/menus/applications-merged/ r,
+
+  owner @{user_cache_dirs}/#@{int8} rwk,
+  owner @{user_cache_dirs}/ksycoca6* rwlk,
+
+  /usr/share/applications/ r,
+  /usr/share/applications/kde-mimeapps.list r,
+  /usr/local/share/applications/ r,
+  /usr/share/applications/*.desktop r,
+  /usr/local/share/applications/*.desktop r,
+  owner @{user_share_dirs}/applications/ r,
+  owner @{user_share_dirs}/applications/** r,
+
+  @{run}/mount/utab r,
+
+  /etc/xdg/menus/ r,
+  /etc/xdg/menus/plasma-applications.menu r,
+
+  include if exists <local/plasma-foreground-booster>
+}

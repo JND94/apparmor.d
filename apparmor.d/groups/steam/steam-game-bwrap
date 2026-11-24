@@ -1,0 +1,307 @@
+abi <abi/5.0>,
+
+include <tunables/global>
+
+@{share_dirs} = @{user_share_dirs}/Steam @{HOME}/.steam/debian-installation
+@{steam_library} = @{share_dirs}/steamapps @{MOUNTS}/**/SteamLibrary/steamapps
+@{app_dirs} = @{steam_library}/common
+@{compatdata} = @{steam_library}/compatdata
+@{runtime} = SteamLinuxRuntime SteamLinuxRuntime_sniper SteamLinuxRuntime_soldier SteamLinuxRuntime_4
+@{proton_dirs} = @{app_dirs}/Proton*/ @{share_dirs}/compatibilitytools.d/*/
+@{client_runtime} = @{share_dirs}/steamrt64/pv-runtime/steam-runtime-steamrt
+
+@{exec_path} = @{app_dirs}/@{runtime}/pressure-vessel/libexec/steam-runtime-tools-0/srt-bwrap
+profile steam-game-bwrap @{app_dirs}/@{runtime}/pressure-vessel/libexec/steam-runtime-tools-0/srt-bwrap flags=(attach_disconnected) {
+  include <abstractions/base>
+  include <abstractions/audio-client>
+  include <abstractions/bwrap>
+  include <abstractions/devices-usb-read>
+  include <abstractions/fonts>
+  include <abstractions/fontconfig-cache-write>
+  include <abstractions/graphics>
+  include <abstractions/input>
+  include <abstractions/nameservice-strict>
+  include <abstractions/sys/dmi-full>
+  include <abstractions/sys/input>
+  include <abstractions/ssl_certs>
+  include <abstractions/uinput>
+  include <abstractions/wayland>
+  include <abstractions/wine>
+  include <abstractions/X-strict>
+
+  network inet dgram,
+  network inet stream,
+  network inet6 dgram,
+  network inet6 stream,
+
+  unix type=dgram peer=(label=steam-game-proton),
+  unix type=stream peer=(label=steam-game-proton),
+
+  ptrace trace peer=steam-game-bwrap,
+  ptrace (read, trace) peer=steam-game-bwrap//&steam-game-proton,
+
+  signal receive set=(cont, int, kill, term) peer=steam-srt-launcher-service,
+  signal send set=(cont, kill, term) peer=steam-game-bwrap//&steam-game-proton,
+
+  @{exec_path} rm,
+
+  @{bin}/bwrap r,
+  @{bin}/true rix,
+
+  owner @{bin}/cat rix,
+  owner @{bin}/env rix,
+  owner @{bin}/gzip rix,
+  owner @{bin}/getopt rix,
+  owner @{bin}/ln rix,
+  owner @{bin}/mkdir rix,
+  owner @{bin}/readlink rix,
+  owner @{bin}/rm rix,
+  owner @{bin}/uname rix,
+
+  @{run}/host@{bin}/ldconfig rix,
+  @{run}/host@{bin}/localedef rix,
+
+  owner @{bin}/steam-runtime-launcher-interface-0 rix, #proton
+  owner @{app_dirs}/@{runtime}/var/steam-runtime/@{arch}@{bin}/steam-runtime-launcher-interface-0 rix,
+  owner @{lib}/pressure-vessel/from-host/libexec/steam-runtime-tools-0/pv-adverb rix,
+  owner @{lib}/pressure-vessel/from-host/libexec/steam-runtime-tools-0/pv-locale-gen rix,
+  owner @{lib}/pressure-vessel/from-host/libexec/steam-runtime-tools-0/pv-try-setlocale rix,
+  owner @{lib}/pressure-vessel/from-host/libexec/steam-runtime-tools-0/@{multiarch}detect-lib rix,
+  owner @{lib}/pressure-vessel/from-host/libexec/steam-runtime-tools-0/@{multiarch}detect-platform rix,
+
+  owner @{share_dirs}/linux32/steamerrorreporter rix, #nnp - stacked?
+  owner @{share_dirs}/steamrt64/gameoverlayui rix, #nnp - stacked?
+
+  priority=1 owner @{proton_dirs}** rpx -> steam-game-bwrap//&steam-game-proton,
+  owner @{python_path} rpx -> steam-game-bwrap//&steam-game-proton,
+
+  owner @{app_dirs}/@{runtime}/pressure-vessel/lib/@{multiarch}/steam-runtime-tools-0/libcap.so* m,
+  owner @{app_dirs}/SteamLinuxRuntime/steam-runtime@{lib}/@{multiarch}/*.so* m, #steamerrorreporter
+  owner @{share_dirs}/steamrt{32,64}/gameoverlayrenderer.so rm,
+  owner @{share_dirs}/ubuntu12_{32,64}/steamoverlayvulkanlayer.so rm,
+  owner @{share_dirs}/steamrt{32,64}/steamoverlayvulkanlayer.so r,
+  owner @{share_dirs}/steamrt{32,64}/libVkLayer_steam_fossilize.so r,
+  owner @{share_dirs}/linux{32,64}/{steamclient,crashhandler}.so rm,
+  owner @{share_dirs}/steamclient{,64}.dll r,
+  owner @{share_dirs}/GameOverlayRenderer64.dll r,
+  owner @{share_dirs}/legacycompat/* r,
+
+  owner /bindfile@{rand6} rw,
+
+  owner @{app_dirs}/ r,
+  owner @{app_dirs}/** rwklmix,
+  owner @{proton_dirs} r,
+  owner @{proton_dirs}** rwkm,
+  owner @{compatdata}/*/** rwlkm,
+
+  /mnt/ r,
+  @{MOUNTS}/ r,
+
+  owner /usr/ r,
+  owner @{lib}/ r,
+  owner /usr/local/ r,
+  owner /usr/local/lib/ r,
+  owner /usr/share/ r,
+  owner /usr/local/share/ r,
+  owner @{steam_library}/ r,
+  owner @{steam_library}/appmanifest_*.acf r,
+  owner @{share_dirs}/ r,
+
+          /home/ r,
+  owner @{HOME}/ r,
+  owner @{HOME}/.local/ r,
+  owner @{HOME}/.steam/steam.pid r,
+  owner @{HOME}/.steam/registry.vdf rk,
+
+  owner @{user_cache_dirs}/ r,
+  owner @{user_cache_dirs}/dxvk/ rw,
+  owner @{user_cache_dirs}/dxvk/@{hex16}.dxvk.{bin,lut} rw, # native game using dxvk
+  owner @{user_cache_dirs}/protonfixes/ rw,
+  owner @{user_cache_dirs}/protonfixes/** rwk,
+
+  owner @{user_config_dirs}/unity3d/{,**} rw,
+  owner @{user_config_dirs}/vkBasalt/vkBasalt.conf r,
+  owner @{user_config_dirs}/MangoHud/MangoHud.conf r,
+
+  owner @{user_share_dirs}/ r,
+  owner @{share_dirs}/installscriptevalutor_log.txt rw,
+  owner @{share_dirs}/appcache/{,**} rk,
+  owner @{share_dirs}/config/virtualgamepadinfo.txt r,
+  owner @{share_dirs}/standalone_installscript_progress_*.vdf rw,
+  owner @{share_dirs}/logs/ r,
+  owner @{share_dirs}/logs/*.txt rwk,
+  owner @{share_dirs}/config/ r,
+  owner @{share_dirs}/config/config.vdf rwk,
+  owner @{share_dirs}/config/config.vdf.async@{pid}.tmp rw,
+  owner @{share_dirs}/userdata/ r,
+  owner @{share_dirs}/userdata/0/ r,
+  owner @{share_dirs}/userdata/*/*/local/** rw,
+  owner @{share_dirs}/userdata/0/*gcache/{,**} rw,
+  owner @{share_dirs}/userdata/*/*/local/ r,
+  owner @{share_dirs}/linux64/ r,
+
+        /dev/tty rw,
+        /dev/shm/ r,
+        @{att}/dev/dri/renderD128 rw,
+  owner /dev/shm/u@{uid}-ValveIPCSharedObj-Steam rwk,
+  owner /dev/shm/u@{uid}-Shm_* rw,
+  owner @{att}/dev/shm/ValveIPCSHM_@{uid} rw,
+        /dev/snd/controlC@{int} w, #Blasphemous
+  owner /dev/shm/mono.@{int} rw,
+  owner /dev/shm/mono-shared-@{uid}-shared_data-archlinux-Linux-@{arch}-* rw,
+  owner /dev/shm/mono-shared-@{uid}-shared_fileshare-archlinux-Linux-@{arch}-* rw,
+
+  /etc/machine-id r,
+
+        @{att}@{run}/dbus/system_bus_socket rw, # !!!
+  owner @{att}@{run}/user/@{uid}/bus rw,
+  owner @{att}@{run}/user/@{uid}/pulse/native rw,
+  owner @{att}@{run}/user/@{uid}/wayland-@{int} rw,
+  owner @{att}@{run}/user/@{uid}/pipewire-@{int} rw,
+
+        @{run}/host@{lib}/**.so* rm,
+        @{run}/host@{lib}/locale/locale-archive r,
+        @{run}/host@{lib}/gconv/gconv-modules r,
+        @{run}/host@{lib}/gconv/gconv-modules.cache r,
+        @{run}/host/fonts/{,**} r,
+        @{run}/host/usr/share/{,**} r,
+        @{run}/host/share/icons/** r,
+        @{run}/host/os-release r,
+        @{run}/host@{lib}/os-release r,
+        @{run}/host/fonts-cache/@{hex32}-le64.cache-@{int} r,
+        @{run}/host/fonts-cache/@{hex32}-le32d4.cache-@{int} r,
+  owner @{run}/host/user-fonts-cache/@{hex32}-le64.cache-@{int} r,
+  owner @{run}/host/user-share/icons/** r,
+  owner @{run}/host/container-manager r, #easyanticheat
+  owner @{run}/pressure-vessel/Xauthority r,
+  owner @{run}/pressure-vessel/pulse/config r,
+  owner @{run}/user/@{uid}/orcexec.@{rand6} rw,
+
+        @{PROC}/ r,
+        @{PROC}/version r,
+        @{PROC}/modules r,
+        @{PROC}/1/maps r,
+        @{PROC}/1/status r,
+        @{PROC}/bus/pci/devices r,
+        @{PROC}/@{pid}/comm r,
+        @{PROC}/@{pid}/maps r,
+        @{PROC}/@{pid}/status r,
+        @{PROC}/@{pid}/net/dev r,
+        @{PROC}/@{pid}/net/ipv6_route r,
+        @{PROC}/@{pid}/net/route r,
+        @{PROC}/sys/fs/file-max r,
+        @{PROC}/uptime r,
+  owner @{PROC}/@{pid}/pagemap r,
+  owner @{PROC}/@{pid}/cmdline rk,
+  owner @{PROC}/@{pid}/comm r,
+  owner @{PROC}/@{pid}/environ r,
+  owner @{PROC}/@{pid}/mounts r,
+  owner @{PROC}/@{pid}/stat r,
+  owner @{PROC}/@{pid}/task/ r,
+  owner @{PROC}/@{pid}/task/@{tid}/comm w,
+  owner @{PROC}/@{pid}/task/@{tid}/stat r,
+  owner @{PROC}/@{pid}/uid_map r,
+
+        /tmp/ r,
+  owner @{tmp}/#@{int} rw,
+  owner @{tmp}/eac_wine_pid_* rw,
+  owner @{tmp}/dumps/ r,
+  owner @{tmp}/dumps/USER_log.txt rw,
+  owner @{tmp}/dumps/assert_*.dmp rw,
+  owner @{tmp}/dumps/crash_*.dmp rw,
+  owner @{tmp}/dumps/@{user}_log.txt rw, #steamerrorreporter
+  owner @{tmp}/source_engine_@{int10}.lock rwk,
+  owner @{tmp}/pressure-vessel-locales-@{rand6}/{,**} rwl,
+  owner @{tmp}/pressure-vessel-libs-@{rand6}/{,**} rw,
+  owner @{att}@{tmp}/steam_chrome_overlay_uid@{uid}_spid@{pid} rw, #gameoverlayui
+  owner @{att}@{tmp}/steam_chrome_shmem_uid@{uid}_spid@{pid} rw,
+  owner @{tmp}/orcexec.@{rand6} rw,
+  owner @{tmp}/protonfixes.log rw,
+
+  owner /var/cache/ldconfig/aux-cache* rw,
+  owner /var/pressure-vessel/ldso/new-ld.so.cache* rw,
+  owner /var/pressure-vessel/ldso/ld.so.cache rw,
+  owner /var/pressure-vessel/ldso/ld.so.conf rw,
+  owner /var/pressure-vessel/ldso/ld.so.conf.@{rand6} rw,
+  owner /var/pressure-vessel/ldso/runtime-ld.so.conf r,
+  owner /var/pressure-vessel/ldso/runtime-ld.so.cache r,
+
+  @{sys}/ r,
+  @{sys}/kernel/ r,
+  @{sys}/class/hidraw/ r,
+  @{sys}/class/net/ r,
+  @{sys}/devices/@{pci}/drm/card@{int}/*/edid r,
+  @{sys}/devices/platform/*/uevent r,
+  @{sys}/devices/platform/uevent r,
+  @{sys}/devices/virtual/dmi/id/sys_vendor k,
+  @{sys}/devices/virtual/dmi/id/product_name k,
+  @{sys}/devices/virtual/net/*/ r,
+  @{sys}/devices/virtual/net/*/carrier r,
+  @{sys}/devices/virtual/net/*/uevent r,
+  @{sys}/devices/@{pci}/net/*/carrier r,
+  @{sys}/devices/system/clocksource/clocksource@{int}/current_clocksource r,
+  @{sys}/devices/virtual/input/mice/uevent r,
+  @{sys}/devices/@{pci}/usb@{int}/*/bcdDevice r,
+  @{sys}/devices/@{pci}/usb@{int}/*/*/bInterfaceNumber r,
+  @{sys}/devices/@{pci}/usb@{int}/*/busnum r,
+  @{sys}/devices/@{pci}/usb@{int}/*/devnum r,
+  @{sys}/devices/@{pci}/usb@{int}/*/manufacturer r,
+  @{sys}/devices/@{pci}/usb@{int}/*/product r,
+  @{sys}/devices/@{pci}/usb@{int}/*/serial r,
+  @{sys}/devices/@{pci}/usb@{int}/*/*/*/report_descriptor r,
+  @{sys}/devices/@{pci}/usb@{int}/*/*/*/input/input@{int}/capabilities/ev r,
+  @{sys}/devices/@{pci}/usb@{int}/*/*/*/input/input@{int}/ r,
+  @{sys}/devices/@{pci}/sound/card@{int}/input@{int}/properties r,
+  @{sys}/devices/@{pci}/sound/card@{int}/input@{int}/capabilities/ev r,
+  @{sys}/devices/@{pci}/sound/card@{int}/input@{int}/capabilities/abs r,
+  @{sys}/devices/@{pci}/sound/card@{int}/input@{int}/capabilities/key r,
+  @{sys}/devices/@{pci}/sound/card@{int}/input@{int}/capabilities/rel r,
+  @{sys}/devices/@{pci}/sound/card@{int}/input@{int}/ r,
+  @{sys}/devices/@{pci}/drm/card@{int}/*/edid r,
+  @{sys}/devices/platform/*/uevent r,
+  @{sys}/devices/platform/*/input/input@{int}/ r,
+  @{sys}/devices/platform/*/input/input@{int}/event@{int}/uevent r,
+  @{sys}/devices/platform/*/input/input@{int}/uevent r,
+  @{sys}/devices/platform/pcspkr/uevent r,
+  @{sys}/devices/platform/pcspkr/input/input@{int}/capabilities/ev r,
+  @{sys}/devices/platform/pcspkr/input/input@{int}/capabilities/abs r,
+  @{sys}/devices/platform/pcspkr/input/input@{int}/properties r,
+  @{sys}/devices/platform/pcspkr/input/input@{int}/capabilities/rel r,
+  @{sys}/devices/platform/pcspkr/input/input@{int}/capabilities/key r,
+  @{sys}/devices/platform/uevent r,
+  @{sys}/devices/@{pci}/net/*/address r,
+  @{sys}/devices/virtual/input/**/uevent r,
+  @{sys}/devices/virtual/input/ r,
+  @{sys}/devices/virtual/input/input@{int}/ r,
+  @{sys}/devices/virtual/input/input@{int}/capabilities/ev r,
+  @{sys}/devices/virtual/input/input@{int}/properties r,
+  @{sys}/devices/virtual/input/input@{int}/capabilities/abs r,
+  @{sys}/devices/virtual/input/input@{int}/capabilities/rel r,
+  @{sys}/devices/virtual/input/input@{int}/capabilities/key r,
+  
+  #MangoHUD
+  @{sys}/class/hwmon/ r,
+  @{sys}/class/thermal/ r,
+  @{sys}/devices/@{pci}/gpu_busy_percent r,
+  @{sys}/devices/@{pci}/mem_info_vram_total r,
+  @{sys}/devices/@{pci}/mem_info_vram_used r,
+  @{sys}/devices/@{pci}/mem_info_gtt_used r,
+  @{sys}/devices/@{pci}/hwmon/ r,
+  @{sys}/devices/system/cpu/cpufreq/policy@{int}/scaling_governor r,
+  @{sys}/devices/@{pci}/hwmon/hwmon@{int}/temp@{int}_input r,
+  @{sys}/devices/@{pci}/hwmon/hwmon@{int}/freq@{int}_input r,
+  @{sys}/devices/@{pci}/hwmon/hwmon@{int}/in@{int}_input r,
+  @{sys}/devices/@{pci}/hwmon/hwmon@{int}/power@{int}_average r,
+  @{sys}/devices/@{pci}/hwmon/hwmon@{int}/power@{int}_cap r,
+  @{sys}/devices/@{pci}/hwmon/hwmon@{int}/fan@{int}_input r,
+  @{sys}/devices/@{pci}/hwmon/hwmon@{int}/temp@{int}_label r,
+  @{sys}/devices/virtual/thermal/thermal_zone@{int}/hwmon@{int}/name r,
+  @{sys}/devices/@{pci}/hwmon/hwmon@{int}/ r,
+  @{sys}/devices/@{pci}/hwmon/hwmon@{int}/name r,
+  @{sys}/devices/platform/*/hwmon/hwmon@{int}/name r,
+  @{sys}/devices/virtual/thermal/thermal_zone@{int}/type r,
+  @{sys}/devices/@{pci}/nvme/nvme@{int}/hwmon@{int}/name r,
+  owner @{PROC}/@{pid}/fdinfo/@{int} r,
+
+  include if exists <local/steam-game-bwrap>
+}

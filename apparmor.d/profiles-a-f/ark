@@ -1,0 +1,75 @@
+abi <abi/5.0>,
+
+include <tunables/global>
+
+@{exec_path} = @{bin}/ark
+profile ark /{,usr/}bin/ark {
+  include <abstractions/base>
+  include <abstractions/graphics>
+  include <abstractions/deny-sensitive-home>
+  include <abstractions/kde-strict>
+  include <abstractions/audio-client>
+
+  @{bin}/ark r,
+  @{bin}/ldd rix,
+  @{bin}/unrar rcx -> plugins,
+  @{bin}/7z rcx -> plugins,
+  @{lib}/7zip/7z rcx -> plugins,
+  @{lib}/kf6/kioworker rPx,
+
+  signal send set=term peer=kioworker,
+
+  /dev/ptmx rw,
+  /dev/tty rw,
+
+  owner @{user_config_dirs}/arkrc rw,
+  owner @{user_config_dirs}/arkrc.@{rand6} rwl,
+  owner @{user_config_dirs}/arkrc.lock rwk,
+  owner @{user_config_dirs}/#@{int8} rw,
+
+  owner @{user_share_dirs}/ark/{,**} rwkl,
+
+  owner @{user_state_dirs}/arkstaterc rw,
+  owner @{user_state_dirs}/arkstaterc.lock rwk,
+  owner @{user_state_dirs}/arkstaterc.@{rand6} rwl,
+  owner @{user_state_dirs}/#@{int8} rw,
+
+  /usr/share/org.kde.syntax-highlighting/syntax-bundled/ r,
+  /usr/share/org.kde.syntax-highlighting/syntax-bundled/index.katesyntax r,
+
+  /etc/xdg/arkrc r,
+  /etc/machine-id r,
+
+  owner @{HOME}/**.{zst,zstd,gz,zip,rar,7z,bz2,xz,lz4,lzma,br,tar,deb,rpm,iso,cab,pacman,apk,cbr,pkg} rw,
+  owner @{MOUNTS}/**.{zst,zstd,gz,zip,rar,7z,bz2,xz,lz4,lzma,br,tar,deb,rpm,iso,cab,pacman,apk,cbr,pkg} rw,
+
+  @{PROC}/sys/kernel/random/boot_id r,
+
+  owner @{tmp}/ark-@{rand6}/{,**} rw,
+
+  profile plugins flags=(complain) {
+    include <abstractions/base>
+    include <abstractions/deny-sensitive-home>
+
+    @{sh_path} r,
+
+    @{bin}/7z r,
+    @{lib}/7zip/7z rix,
+    @{bin}/unrar r,
+
+    @{lib}/7zip/7z.so rm,
+
+    @{sys}/devices/system/cpu/possible r,
+
+    @{lib}/gconv/gconv-modules.cache r,
+
+    owner @{HOME}/**.{zst,zstd,gz,zip,rar,7z,bz2,xz,lz4,lzma,br,tar,deb,rpm,iso,cab,pacman,apk,cbr,pkg} rw,
+    owner @{MOUNTS}/**.{zst,zstd,gz,zip,rar,7z,bz2,xz,lz4,lzma,br,tar,deb,rpm,iso,cab,pacman,apk,cbr,pkg} rw,
+
+    /tmp/ r,
+
+    include if exists <local/ark_plugins>
+  }
+
+  include if exists <local/ark>
+}

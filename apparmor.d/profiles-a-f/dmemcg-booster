@@ -1,0 +1,20 @@
+abi <abi/5.0>,
+
+include <tunables/global>
+
+@{exec_path} = @{bin}/dmemcg-booster
+profile dmemcg-booster @{bin}/dmemcg-booster {
+  include <abstractions/base>
+  include <abstractions/bus-system>
+  include <abstractions/bus-session>
+
+  capability dac_override,
+
+  @{sys}/fs/cgroup/{,**} r,
+  @{sys}/fs/cgroup/cgroup.subtree_control w,
+  @{sys}/fs/cgroup/dmem.low w,
+  @{sys}/fs/cgroup/**/cgroup.subtree_control w,
+  @{sys}/fs/cgroup/**/dmem.low w,
+
+  include if exists <local/dmemcg-booster>
+}

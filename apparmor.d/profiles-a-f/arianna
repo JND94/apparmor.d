@@ -1,0 +1,78 @@
+abi <abi/5.0>,
+
+include <tunables/global>
+
+@{exec_path} = @{bin}/arianna
+profile arianna @{bin}/arianna {
+  include <abstractions/base>
+  include <abstractions/bus-session>
+  include <abstractions/graphics>
+  include <abstractions/icons>
+  include <abstractions/mime>
+  include <abstractions/nameservice-strict>
+  include <abstractions/fonts>
+  include <abstractions/ssl_certs>
+  include <abstractions/user-dirs>
+  include <abstractions/wayland-strict>
+  include <abstractions/X-strict>
+
+  userns,
+  capability sys_admin,
+  capability sys_chroot,
+  capability sys_ptrace,
+
+  network inet6 stream,
+  network inet stream,
+  network inet6 dgram,
+  network inet dgram,
+  network netlink raw,
+
+  @{lib}/qt6/QtWebEngineProcess rix,
+
+  owner @{user_share_dirs}/arianna/{,**} rw,
+  owner @{user_share_dirs}/arianna/library.sqlite k,
+  owner @{user_share_dirs}/color-schemes/ r,
+  owner @{user_share_dirs}/color-schemes/*.colors r,
+
+  owner @{user_config_dirs}/#@{int8} rw,
+  owner @{user_config_dirs}/ariannarc.lock rwk,
+  owner @{user_config_dirs}/ariannarc rw,
+  owner @{user_config_dirs}/arianna.lock rwk,
+  owner @{user_config_dirs}/ariannarc.lock.rmlock rw,
+  owner @{user_config_dirs}/ariannarc.lock.rmlock.rmlock rw,
+  deny owner @{user_config_dirs}/chromium/WidevineCdm/{,**} rm,
+  deny owner @{HOME}/.mozilla/firefox/ r,
+
+  owner @{user_cache_dirs}/arianna/{,**} rwl,
+  owner @{user_cache_dirs}/qtshadercache-@{arch}-little_endian-lp64/ rw,
+  owner @{user_cache_dirs}/qtshadercache-@{arch}-little_endian-lp64/* rwl,
+
+        @{PROC}/ r,
+        @{PROC}/sys/fs/inotify/max_user_watches r,
+        @{PROC}/sys/kernel/yama/ptrace_scope r,
+  owner @{PROC}/@{pid}/stat r,
+  owner @{PROC}/@{pid}/fd/ r,
+  owner @{PROC}/@{pid}/setgroups w,
+  owner @{PROC}/@{pid}/gid_map rw,
+  owner @{PROC}/@{pid}/uid_map rw,
+  owner @{PROC}/@{pid}/oom_score_adj rw,
+  owner @{PROC}/@{pid}/task/ r,
+  owner @{PROC}/@{pid}/statm r,
+  owner @{PROC}/@{pid}/task/@{tid}/status r,
+
+  @{sys}/devices/system/cpu/kernel_max r,
+
+  owner /dev/shm/.org.chromium.Chromium.@{rand6} rw,
+
+  owner /usr/share/qt6/resources/locales/ rw,
+  /usr/share/qt6/resources/v8_context_snapshot.bin r,
+  /usr/share/qt6/resources/*.pak r,
+  /usr/share/qt6/translations/qtwebengine_locales/*.pak r,
+  /usr/share/color-schemes/* r,
+  /usr/share/color-schemes/ r,
+
+  /etc/ssl/certs/ r,
+  /etc/ssl/ r,
+
+  include if exists <local/arianna>
+}

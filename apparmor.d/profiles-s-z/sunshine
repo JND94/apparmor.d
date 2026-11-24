@@ -1,0 +1,46 @@
+abi <abi/5.0>,
+
+include <tunables/global>
+
+@{exec_path} = @{bin}/sunshine
+profile sunshine /usr/bin/sunshine {
+  include <abstractions/base>
+  include <abstractions/graphics>
+  include <abstractions/uinput>
+  include <abstractions/input>
+  include <abstractions/bus-session>
+  include <abstractions/bus-system>
+  include <abstractions/kde-strict>
+  include <abstractions/nameservice-strict>
+  include <abstractions/audio-client>
+  include <abstractions/wayland-strict>
+  include <abstractions/X-strict>
+
+  capability sys_admin,
+
+  network netlink raw,
+  network inet stream peer=(port=47984),
+  network inet stream peer=(port=47989),
+  network inet stream peer=(port=47990),
+  network inet stream peer=(port=48010),
+  network inet dgram peer=(port=48000),
+  network inet dgram peer=(port=47998),
+  network inet dgram peer=(port=47999),
+
+  owner @{user_config_dirs}/sunshine/** rw,
+
+  /usr/share/sunshine/** r,
+
+  @{sys}/devices/system/node/ r,
+  @{sys}/devices/virtual/dmi/id/product_name r,
+  @{sys}/devices/virtual/dmi/id/sys_vendor r,
+  @{sys}/devices/virtual/dmi/id/board_vendor r,
+  @{sys}/devices/virtual/dmi/id/bios_vendor r,
+  @{sys}/devices/@{pci}/net/*/address r,
+
+  @{PROC}/@{pid}/status r,
+  @{PROC}/@{pid}/task/@{tid}/comm w,
+  @{PROC}/@{pid}/fd/ r,
+
+  include if exists <local/sunshine>
+}

@@ -1,0 +1,8 @@
+abi <abi/5.0>,
+
+include <tunables/global>
+
+@{exec_path} = @{user_share_dirs}/Steam/ubuntu12_32/steam
+profile steam-executable32 @{user_share_dirs}/Steam/ubuntu12_32/steam {
+  include <abstractions/base>
+}

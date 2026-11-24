@@ -1,0 +1,36 @@
+abi <abi/5.0>,
+
+include <tunables/global>
+
+@{exec_path} = @{bin}/exe-thumbnailer
+profile exe-thumbnailer @{bin}/exe-thumbnailer {
+  include <abstractions/base-strict>
+  include <abstractions/python>
+
+  @{exec_path} r,
+  @{python_path} r,
+  @{bin}/icoextract r,
+  @{bin}/gettext r,
+  @{bin}/gzip r,
+  @{bin}/locale r,
+  @{bin}/xz r,
+
+  @{bin}/ r,
+  @{lib}/ r,  
+
+  /usr/ r,
+
+  owner @{HOME}/**.{dll,exe,cpl} r,
+  owner @{MOUNTS}/**.{dll,exe,cpl} r,
+
+  /etc/ssl/openssl.cnf r,
+
+  owner @{PROC}/@{pid}/mounts r,
+  owner @{PROC}/@{pid}/maps r,
+  owner @{PROC}/@{pid}/status r,
+        @{PROC}/sys/vm/overcommit_memory r,
+
+  owner @{tmp}/dolphin-@{rand6}/@{rand6}.png rw,
+
+  include if exists <local/exe-thumbnailer>
+}
