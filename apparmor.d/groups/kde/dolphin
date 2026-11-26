@@ -11,7 +11,7 @@ include <tunables/global>
 @{exec_path} = @{bin}/dolphin
 profile dolphin @{exec_path} flags=(attach_disconnected,mediate_deleted) {
   include <abstractions/base>
-  include <abstractions/app-launcher-user>
+  include <abstractions/app-launcher-user-strict>
   include <abstractions/audio-client>
   include <abstractions/bus/system/org.freedesktop.UDisks2>
   include <abstractions/common/kde>
