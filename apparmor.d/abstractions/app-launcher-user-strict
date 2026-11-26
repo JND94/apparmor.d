@@ -1,0 +1,35 @@
+# apparmor.d - Full set of apparmor profiles
+# Copyright (C) 2020-2022 Mikhail Morfikov
+# Copyright (C) 2022-2024 Alexandre Pujol <alexandre@pujol.io>
+# SPDX-License-Identifier: GPL-2.0-only
+#aa:lint ignore=dangerous-exec
+
+  abi <abi/5.0>,
+
+  include <abstractions/path>
+
+  @{bin}/**                 Px,
+  @{lib}/**                 Px,
+  /opt/*/**                 Px,
+  /usr/local/bin/**         Px,
+  /usr/share/**             Px,
+
+  owner @{user_bin_dirs}/** Px,
+
+  # Labeled programs
+  @{archive_viewers_path}   Px,
+  @{backup_path}            Px,
+  @{document_viewers_path}  Px,
+  @{emails_path}            Px,
+  @{image_viewers_path}     Px,
+  @{offices_path}           Px,
+  @{terminal_path}          Px,
+  @{text_editors_path}      Px,
+  @{browsers_path}          Px,
+  @{file_explorers_path}    Px,
+  @{help_path}              Px,
+  @{thunderbird_path}       Px,
+
+  include if exists <abstractions/app-launcher-user-strict.d>
+
+# vim:syntax=apparmor
